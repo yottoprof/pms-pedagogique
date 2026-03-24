@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Novotel Sorgues — PMS Réception</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#06111f}
+body{font-family:'Inter','Segoe UI',sans-serif;color:#dde4ee;font-size:13.5px}
+input,select,textarea,button{font-family:inherit}
+input[type=date]{color-scheme:dark}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.5) sepia(1) saturate(0.4)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+select option{background:#0b1c30;color:#dde4ee}
+button{cursor:pointer}
+tr:hover td{background:rgba(255,255,255,.018)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media print{.no-print{display:none!important}body,html{background:#fff!important;color:#000!important}.print-bg{background:#fff!important;color:#000!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useMemo,useEffect,useRef,useCallback}=React;
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║           ★  ZONE DE CONFIGURATION ENSEIGNANT  ★            ║
+   ║  Modifiez uniquement ce bloc pour adapter le logiciel        ║
+   ║  à votre établissement. Ne touchez pas au reste du code.     ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+const CONFIG = {
+
+  /* ── 1. ÉTABLISSEMENT ──────────────────────────────────────── */
+  hotel: {
+    nom:      "Novotel",               // Nom affiché partout dans l'interface
+    ville:    "Sorgues",               // Ville (affichée sous le logo)
+    etoiles:  4,                       // Nombre d'étoiles (1 à 5)
+    adresse:  "535 Avenue de la Paix, 84700 Sorgues",
+    tel:      "04 90 00 00 00",
+    email:    "h0000-re@accor.com",
+    siret:    "123 456 789 00010",
+    tva:      0.10,                    // Taux TVA hôtellerie (10% = 0.10)
+  },
+
+  /* ── 2. COPYRIGHT ──────────────────────────────────────────── */
+  copyright: {
+    auteur:   "Yannick Otto",
+    lycee:    "Lycée Victor Hugo, Carpentras",
+    version:  "v2.0",
+  },
+
+  /* ── 3. COULEUR PRINCIPALE ─────────────────────────────────── */
+  // Couleur du logo, boutons et accents. Ex : Novotel="#D4213D", Ibis="#E2001A",
+  // Mercure="#003473", Marriott="#8B0000", Hilton="#003580"
+  couleur: "#D4213D",
+
+  /* ── 4. MÉTÉO LOCALE ───────────────────────────────────────── */
+  // Températures moyennes par mois pour votre ville (Jan→Déc)
+  meteo: {
+    ville: "Sorgues",
+    temperatures: [8, 10, 13, 17, 21, 26, 30, 29, 24, 18, 12, 7],
+    //             Jan Fév Mar Avr Mai Jun Jul Aoû Sep Oct Nov Déc
+  },
+
+  /* ── 5. PERSONNEL (comptes de connexion) ───────────────────── */
+  // Rôles disponibles : "receptionniste" | "manager" | "directeur"
+  // Le directeur voit tout. Le manager voit les stats. Le réceptionniste : opérations.
+  staff: [
+    { login:"blanc",  mdp:"1234", nom:"Marie BLANC",    poste:"Réceptionniste",    role:"receptionniste", shift:"Matin (6h–14h)",    avatar:"MB" },
+    { login:"roux",   mdp:"1234", nom:"Thomas ROUX",     poste:"Réceptionniste",    role:"receptionniste", shift:"Soir (14h–22h)",     avatar:"TR" },
+    { login:"martin", mdp:"9999", nom:"Camille MARTIN",  poste:"Chef de réception", role:"manager",        shift:"Journée (9h–18h)",   avatar:"CM" },
+    { login:"durand", mdp:"0000", nom:"Paul DURAND",     poste:"Directeur",         role:"directeur",      shift:"Direction",          avatar:"PD" },
+  ],
+
+  /* ── 6. PENSIONS / RESTAURATION ───────────────────────────── */
+  pensions: [
+    { code:"SA",  label:"Sans petit-déjeuner",  supp:0  },
+    { code:"PDJ", label:"Petit-déjeuner inclus", supp:15 },
+    { code:"DP",  label:"Demi-pension",          supp:45 },
+    { code:"PC",  label:"Pension complète",      supp:75 },
+  ],
+
+  /* ── 7. CHAMBRES ───────────────────────────────────────────── */
+  // statut initial : "libre" | "occupée" | "réservée" | "maintenance"
+  chambres: [
+    { id:"101", type:"Standard",       etage:1, literie:"Double",      cap:2, prix:89,  vue:"Jardin",      statut:"libre",       equip:["Wi-Fi","TV","Climatisation","Coffre-fort"] },
+    { id:"102", type:"Standard",       etage:1, literie:"Lits jumeaux", cap:2, prix:89,  vue:"Jardin",      statut:"libre",       equip:["Wi-Fi","TV","Climatisation"] },
+    { id:"103", type:"Standard",       etage:1, literie:"Double",      cap:2, prix:85,  vue:"Rue",         statut:"libre",       equip:["Wi-Fi","TV","Climatisation"] },
+    { id:"104", type:"Standard",       etage:1, literie:"Double",      cap:2, prix:89,  vue:"Jardin",      statut:"maintenance", equip:["Wi-Fi","TV"] },
+    { id:"105", type:"Standard",       etage:1, literie:"Lits jumeaux", cap:3, prix:95,  vue:"Jardin",      statut:"libre",       equip:["Wi-Fi","TV","Climatisation","Coffre-fort"] },
+    { id:"201", type:"Supérieure",     etage:2, literie:"King Size",   cap:2, prix:139, vue:"Piscine",     statut:"occupée",     equip:["Wi-Fi","TV","Climatisation","Mini-bar","Baignoire"] },
+    { id:"202", type:"Supérieure",     etage:2, literie:"Double",      cap:2, prix:135, vue:"Piscine",     statut:"libre",       equip:["Wi-Fi","TV","Climatisation","Mini-bar"] },
+    { id:"203", type:"Supérieure",     etage:2, literie:"Lits jumeaux", cap:3, prix:145, vue:"Jardin",      statut:"libre",       equip:["Wi-Fi","TV","Climatisation","Mini-bar","Terrasse"] },
+    { id:"204", type:"Supérieure",     etage:2, literie:"King Size",   cap:2, prix:149, vue:"Piscine",     statut:"réservée",    equip:["Wi-Fi","TV","Climatisation","Mini-bar","Baignoire","Terrasse"] },
+    { id:"205", type:"Supérieure",     etage:2, literie:"Double",      cap:2, prix:139, vue:"Jardin",      statut:"libre",       equip:["Wi-Fi","TV","Climatisation","Mini-bar"] },
+    { id:"301", type:"Suite Junior",   etage:3, literie:"King Size",   cap:2, prix:199, vue:"Piscine",     statut:"occupée",     equip:["Wi-Fi","TV","Climatisation","Mini-bar","Balnéo","Terrasse","Salon"] },
+    { id:"302", type:"Suite",          etage:3, literie:"King Size",   cap:3, prix:249, vue:"Panoramique", statut:"libre",       equip:["Wi-Fi","TV","Climatisation","Mini-bar","Jacuzzi","Terrasse","Salon","Kitchenette"] },
+    { id:"303", type:"Suite Prestige", etage:3, literie:"King Size",   cap:4, prix:299, vue:"Panoramique", statut:"réservée",    equip:["Wi-Fi","TV","Climatisation","Mini-bar","Jacuzzi","Terrasse privée","Salon","Kitchenette","Butler"] },
+  ],
+
+  /* ── 8. CLIENTS DE DÉPART ──────────────────────────────────── */
+  // Fidélité : "Bronze" | "Argent" | "Or" | "Platine"
+  clients: [
+    { id:"C001", nom:"DUPONT",   prenom:"Marie",  email:"m.dupont@email.fr",    tel:"06 12 34 56 78",    ville:"Lyon",      pays:"France",         fidelite:"Or",      sejours:8  },
+    { id:"C002", nom:"MARTIN",   prenom:"Jean",   email:"j.martin@email.fr",    tel:"06 98 76 54 32",    ville:"Paris",     pays:"France",         fidelite:"Argent",  sejours:3  },
+    { id:"C003", nom:"SCHMIDT",  prenom:"Klaus",  email:"k.schmidt@mail.de",    tel:"+49 171 1234567",   ville:"Berlin",    pays:"Allemagne",      fidelite:"Bronze",  sejours:1  },
+    { id:"C004", nom:"JOHNSON",  prenom:"Sarah",  email:"s.johnson@mail.uk",    tel:"+44 7700 900958",   ville:"London",    pays:"Royaume-Uni",    fidelite:"Bronze",  sejours:2  },
+    { id:"C005", nom:"LEROY",    prenom:"Thomas", email:"t.leroy@email.fr",     tel:"07 11 22 33 44",    ville:"Marseille", pays:"France",         fidelite:"Or",      sejours:6  },
+    { id:"C006", nom:"BERNARD",  prenom:"Sophie", email:"s.bernard@email.fr",   tel:"06 55 44 33 22",    ville:"Bordeaux",  pays:"France",         fidelite:"Platine", sejours:15 },
+    { id:"C007", nom:"RUSSO",    prenom:"Marco",  email:"m.russo@mail.it",      tel:"+39 06 12345678",   ville:"Rome",      pays:"Italie",         fidelite:"Bronze",  sejours:1  },
+  ],
+
+};
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║              FIN DE LA ZONE DE CONFIGURATION                ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+/* Alias internes — ne pas modifier */
+const HOTEL    = CONFIG.hotel;
+const STAFF    = CONFIG.staff;
+const PENSIONS = CONFIG.pensions;
+const CHAMBRES_INIT = CONFIG.chambres;
+const CLIENTS_INIT  = CONFIG.clients;
+const COULEUR  = CONFIG.couleur;
+/* ══════════════════════════════════════════════════════
+   UTILITAIRES
+══════════════════════════════════════════════════════ */
+const today=new Date();
+const fmt=d=>d.toISOString().split("T")[0];
+const addDays=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()+n);return r};
+const getNuits=(a,b)=>Math.max(0,Math.round((new Date(b)-new Date(a))/86400000));
+const fmtDate=s=>{if(!s)return"";const d=new Date(s+"T12:00:00");return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"})};
+const fmtEuro=n=>typeof n==="number"?n.toLocaleString("fr-FR",{style:"currency",currency:"EUR"}):"—";
+const subDays=(d,n)=>{const r=new Date(d);r.setDate(r.getDate()-n);return r};
+
+/* ══════════════════════════════════════════════════════
+   MÉTÉO — depuis CONFIG.meteo
+══════════════════════════════════════════════════════ */
+const METEO_BASE=(()=>{
+  const m=today.getMonth();
+  const t=CONFIG.meteo.temperatures[m];
+  const icons=["☁️","🌧️","🌦️","⛅","☀️","🌤️","☀️","🌤️","⛅","☁️","🌧️","❄️"];
+  const descs=["Nuageux","Couvert","Averses","Partiellement nuageux","Ensoleillé","Beau temps","Ensoleillé","Beau temps","Partiellement nuageux","Nuageux","Pluie","Froid"];
+  return{t,desc:descs[m],icon:icons[m],ville:CONFIG.meteo.ville};
+})();
+
+/* ══════════════════════════════════════════════════════
+   RÉSERVATIONS INITIALES
+══════════════════════════════════════════════════════ */
+const RESERVATIONS_INIT=[
+  {id:"R001",clientId:"C001",chambreId:"201",arrivee:fmt(today),depart:fmt(addDays(today,3)),adultes:2,enfants:0,statut:"en cours",pension:"PDJ",notes:"",numero:"2024-001"},
+  {id:"R002",clientId:"C002",chambreId:"103",arrivee:fmt(addDays(today,1)),depart:fmt(addDays(today,2)),adultes:1,enfants:0,statut:"confirmée",pension:"SA",notes:"Chambre calme demandée",numero:"2024-002"},
+  {id:"R003",clientId:"C005",chambreId:"301",arrivee:fmt(addDays(today,-2)),depart:fmt(addDays(today,1)),adultes:2,enfants:1,statut:"en cours",pension:"DP",notes:"Anniversaire de mariage",numero:"2024-003"},
+  {id:"R004",clientId:"C003",chambreId:"204",arrivee:fmt(addDays(today,3)),depart:fmt(addDays(today,6)),adultes:2,enfants:0,statut:"confirmée",pension:"SA",notes:"",numero:"2024-004"},
+  {id:"R005",clientId:"C006",chambreId:"303",arrivee:fmt(addDays(today,1)),depart:fmt(addDays(today,3)),adultes:2,enfants:2,statut:"confirmée",pension:"PC",notes:"Cliente Platine — panier bienvenue",numero:"2024-005"},
+];
+
+/* ══════════════════════════════════════════════════════
+   COULEURS
+══════════════════════════════════════════════════════ */
+const SC={"libre":"#3dbe7a","occupée":"#e05c5c","réservée":"#e8a030","maintenance":"#7a8a9a"};
+const SR={"confirmée":"#3dbe7a","en cours":"#4a9fd4","terminée":"#5a6a7a","annulée":"#e05c5c"};
+const FC={"Bronze":"#cd7f32","Argent":"#a8a8c0","Or":"#d4a830","Platine":"#90c0e0"};
+const RL={"receptionniste":"#4a9fd4","manager":"#e8a030","directeur":"#a070d0"};
+
+/* ══════════════════════════════════════════════════════
+   CALCULS
+══════════════════════════════════════════════════════ */
+const calcTotal=(ch,r)=>{
+  if(!ch||!r)return 0;
+  const n=getNuits(r.arrivee,r.depart);
+  const p=PENSIONS.find(x=>x.code===r.pension)||{supp:0};
+  return(ch.prix+p.supp*(r.adultes||1))*n;
+};
+
+/* ══════════════════════════════════════════════════════
+   STYLES
+══════════════════════════════════════════════════════ */
+const S={
+  card:{background:"rgba(15,26,42,.95)",border:"1px solid rgba(255,255,255,.07)",borderRadius:8,padding:"18px 20px",marginBottom:14},
+  th:{textAlign:"left",padding:"8px 12px",background:"rgba(255,255,255,.04)",color:"#8a9fbb",fontSize:10.5,textTransform:"uppercase",letterSpacing:".7px",borderBottom:"1px solid rgba(255,255,255,.07)",fontWeight:600},
+  td:{padding:"9px 12px",borderBottom:"1px solid rgba(255,255,255,.04)",verticalAlign:"middle",fontSize:13},
+  input:{background:"rgba(255,255,255,.05)",border:"1px solid rgba(255,255,255,.1)",borderRadius:6,padding:"7px 11px",color:"#dde4ee",fontSize:13,width:"100%"},
+  label:{fontSize:10.5,color:"#7a8a9a",marginBottom:4,display:"block",textTransform:"uppercase",letterSpacing:".5px"},
+  btnPrim:{background:"#D4213D",color:"#fff",border:"none",borderRadius:5,padding:"8px 18px",fontSize:13,fontWeight:600},
+  btnSec:{background:"rgba(255,255,255,.06)",color:"#9aabbf",border:"1px solid rgba(255,255,255,.1)",borderRadius:5,padding:"6px 13px",fontSize:12},
+  btnAcc:{background:"rgba(212,33,61,.12)",color:"#e05272",border:"1px solid rgba(212,33,61,.3)",borderRadius:5,padding:"5px 12px",fontSize:11.5,fontWeight:500,marginRight:4},
+  btnGhost:{background:"transparent",color:"#7a8a9a",border:"1px solid rgba(255,255,255,.08)",borderRadius:5,padding:"5px 12px",fontSize:11.5,marginRight:4},
+};
+
+const Lbl=({children})=><label style={S.label}>{children}</label>;
+const Inp=({style,...p})=><input style={{...S.input,...style}} {...p}/>;
+const Sel=({style,children,...p})=><select style={{...S.input,...style}} {...p}>{children}</select>;
+
+const badge=(color,txt,border=false)=>(
+  <span style={{display:"inline-block",padding:"2px 9px",borderRadius:20,
+    background:color+"1a",color,fontSize:11,fontWeight:600,
+    border:border?`1px solid ${color}44`:undefined}}>{txt}</span>
+);
+
+function Avatar({initials,color="#D4213D",size=30}){
+  return(
+    <div style={{width:size,height:size,borderRadius:"50%",background:color+"22",
+      border:`1px solid ${color}44`,display:"flex",alignItems:"center",justifyContent:"center",
+      fontSize:size*.35,fontWeight:700,color,flexShrink:0}}>
+      {initials}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   HORLOGE EN TEMPS RÉEL
+══════════════════════════════════════════════════════ */
+function Clock(){
+  const[now,setNow]=useState(new Date());
+  useEffect(()=>{const id=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(id);},[]);
+  const h=now.getHours().toString().padStart(2,"0");
+  const m=now.getMinutes().toString().padStart(2,"0");
+  const s=now.getSeconds().toString().padStart(2,"0");
+  return(
+    <div style={{textAlign:"right"}}>
+      <div style={{fontVariantNumeric:"tabular-nums",fontSize:22,fontWeight:700,color:"#dde4ee",letterSpacing:2,lineHeight:1.1}}>
+        {h}:{m}<span style={{animation:"pulse 1s infinite",color:"#7a8a9a"}}>:</span>{s}
+      </div>
+      <div style={{fontSize:11,color:"#5a6e82"}}>
+        {now.toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short",year:"numeric"})}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MÉTÉO
+══════════════════════════════════════════════════════ */
+function Meteo(){
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:8,background:"rgba(255,255,255,.04)",
+      border:"1px solid rgba(255,255,255,.07)",borderRadius:6,padding:"6px 12px",fontSize:12}}>
+      <span style={{fontSize:18}}>{METEO_BASE.icon}</span>
+      <div>
+        <div style={{color:"#dde4ee",fontWeight:600}}>{METEO_BASE.t}°C</div>
+        <div style={{color:"#5a6e82",fontSize:10.5}}>{METEO_BASE.desc} · {METEO_BASE.ville}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   ÉCRAN DE CONNEXION
+══════════════════════════════════════════════════════ */
+function LoginScreen({onLogin,onModeEnseignant}){
+  const[login,setLogin]=useState("");
+  const[mdp,setMdp]=useState("");
+  const[err,setErr]=useState("");
+  const[loading,setLoading]=useState(false);
+
+  const handleLogin=()=>{
+    setErr("");setLoading(true);
+    setTimeout(()=>{
+      const user=STAFF.find(s=>s.login===login.toLowerCase()&&s.mdp===mdp);
+      if(user){onLogin(user);}
+      else{setErr("Identifiant ou mot de passe incorrect.");setLoading(false);}
+    },800);
+  };
+
+  const handleKey=e=>{if(e.key==="Enter")handleLogin();};
+
+  return(
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"#06111f",
+      backgroundImage:"radial-gradient(ellipse at 20% 50%,rgba(212,33,61,.08) 0%,transparent 55%), radial-gradient(ellipse at 80% 20%,rgba(74,159,212,.06) 0%,transparent 50%)"}}>
+
+      {/* Barre supérieure */}
+      <div style={{padding:"16px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(255,255,255,.05)"}}>
+        <NovotelLogo/>
+        <Meteo/>
+      </div>
+
+      {/* Corps */}
+      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",padding:24,gap:24,flexWrap:"wrap"}}>
+
+        {/* ── BOUTON ENSEIGNANT À GAUCHE ── */}
+        <div style={{width:"min(300px,100%)",animation:"fadeIn .4s ease"}}>
+          <div style={{
+            background:"rgba(16,36,20,.95)",
+            border:"2px solid rgba(61,190,122,.35)",
+            borderRadius:12,padding:"28px 24px",
+            boxShadow:"0 8px 32px rgba(0,0,0,.4)"
+          }}>
+            <div style={{textAlign:"center",marginBottom:18}}>
+              <div style={{fontSize:28,marginBottom:8}}>🎓</div>
+              <div style={{fontSize:15,fontWeight:700,color:"#3dbe7a"}}>Mode Enseignant</div>
+              <div style={{fontSize:11.5,color:"#3a6a4a",marginTop:4,lineHeight:1.5}}>
+                Personnalisez l'hôtel, le personnel,<br/>les chambres et les clients
+              </div>
+            </div>
+            <button
+              style={{
+                width:"100%",padding:"12px",fontSize:14,fontWeight:700,
+                background:"linear-gradient(135deg,#2a6a3a,#1e5030)",
+                color:"#7aefaa",border:"1px solid rgba(61,190,122,.4)",
+                borderRadius:8,cursor:"pointer",letterSpacing:.5,
+                display:"flex",alignItems:"center",justifyContent:"center",gap:8
+              }}
+              onClick={onModeEnseignant}>
+              ⚙ Accéder au paramétrage
+            </button>
+            <div style={{marginTop:14,padding:"10px 12px",background:"rgba(0,0,0,.2)",borderRadius:6,fontSize:10.5,color:"#2a5a3a"}}>
+              Aucun mot de passe requis.<br/>
+              Modifiez le nom de l'hôtel, les comptes élèves,<br/>
+              les chambres et la base clients.
+            </div>
+          </div>
+        </div>
+
+        {/* ── CONNEXION À DROITE ── */}
+        <div style={{width:"min(380px,100%)",animation:"fadeIn .4s ease"}}>
+          <div style={{background:"rgba(12,22,36,.98)",border:"1px solid rgba(255,255,255,.09)",
+            borderRadius:12,padding:"32px 32px 28px",boxShadow:"0 24px 60px rgba(0,0,0,.5)"}}>
+
+            <div style={{textAlign:"center",marginBottom:24}}>
+              <div style={{fontSize:12,color:"#5a6e82",textTransform:"uppercase",letterSpacing:2,marginBottom:4}}>
+                Connexion réception
+              </div>
+              <h2 style={{fontSize:18,color:"#dde4ee",fontWeight:600}}>Accès PMS</h2>
+            </div>
+
+            <div style={{marginBottom:12}}>
+              <Lbl>Identifiant</Lbl>
+              <Inp placeholder="ex : blanc" value={login}
+                onChange={e=>setLogin(e.target.value)} onKeyDown={handleKey}
+                style={{background:"rgba(255,255,255,.04)"}}/>
+            </div>
+            <div style={{marginBottom:18}}>
+              <Lbl>Mot de passe</Lbl>
+              <Inp type="password" placeholder="••••" value={mdp}
+                onChange={e=>setMdp(e.target.value)} onKeyDown={handleKey}
+                style={{background:"rgba(255,255,255,.04)"}}/>
+            </div>
+
+            {err&&<div style={{fontSize:12,color:"#e05c5c",marginBottom:12,textAlign:"center"}}>{err}</div>}
+
+            <button style={{...S.btnPrim,width:"100%",padding:"11px",fontSize:13,
+              opacity:loading?.6:1,borderRadius:7}}
+              onClick={handleLogin} disabled={loading}>
+              {loading
+                ?<span style={{display:"inline-block",width:14,height:14,border:"2px solid #fff",
+                    borderTopColor:"transparent",borderRadius:"50%",animation:"spin .8s linear infinite",verticalAlign:"middle"}}/>
+                :"Se connecter →"}
+            </button>
+
+            {/* Comptes rapides */}
+            <div style={{marginTop:18,padding:"10px 12px",background:"rgba(74,159,212,.06)",
+              border:"1px solid rgba(74,159,212,.12)",borderRadius:5}}>
+              <div style={{fontSize:9.5,color:"#4a9fd4",fontWeight:600,marginBottom:6,textTransform:"uppercase",letterSpacing:.7}}>
+                Comptes de démonstration
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}}>
+                {STAFF.map(s=>(
+                  <div key={s.login} style={{fontSize:10.5,color:"#3a5a6a",cursor:"pointer",
+                    padding:"3px 6px",borderRadius:3,background:"rgba(255,255,255,.02)"}}
+                    onClick={()=>{setLogin(s.login);setMdp(s.mdp);}}>
+                    <span style={{color:"#6a9ab0",fontWeight:600}}>{s.login}</span>
+                    <span style={{color:"#2a4050"}}> / {s.mdp}</span>
+                    <span style={{color:RL[s.role],marginLeft:3,fontSize:9}}>
+                      {s.role==="directeur"?"DIR":s.role==="manager"?"MGR":"REC"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div style={{textAlign:"center",marginTop:12,fontSize:10.5,color:"#1e2e3e"}}>
+            © {new Date().getFullYear()} {CONFIG.copyright.auteur} — {CONFIG.copyright.lycee} · Usage scolaire exclusif
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   COMPOSANT PRINCIPAL
+══════════════════════════════════════════════════════ */
+function App(){
+  const[user,setUser]=useState(null);
+  const[tab,setTab]=useState("dashboard");
+  const[chambres,setChambres]=useState(CHAMBRES_INIT);
+  const[clients,setClients]=useState(CLIENTS_INIT);
+  const[resas,setResas]=useState(RESERVATIONS_INIT);
+  const[modal,setModal]=useState(null);
+  const[notif,setNotif]=useState(null);
+
+  const canStats=user&&(user.role==="manager"||user.role==="directeur");
+  const canAdmin=user&&user.role==="directeur";
+
+  const notify=(msg,type="ok")=>{setNotif({msg,type});setTimeout(()=>setNotif(null),3400);};
+
+  const getCh=id=>chambres.find(c=>c.id===id);
+  const getCl=id=>clients.find(c=>c.id===id);
+
+  const checkin=id=>{
+    const r=resas.find(x=>x.id===id);if(!r)return;
+    setChambres(p=>p.map(c=>c.id===r.chambreId?{...c,statut:"occupée"}:c));
+    setResas(p=>p.map(x=>x.id===id?{...x,statut:"en cours"}:x));
+    notify(`✓ Check-in — Chambre ${r.chambreId} (${getCl(r.clientId)?.nom})`,"ok");
+  };
+  const checkout=id=>{
+    const r=resas.find(x=>x.id===id);if(!r)return;
+    setChambres(p=>p.map(c=>c.id===r.chambreId?{...c,statut:"libre"}:c));
+    setResas(p=>p.map(x=>x.id===id?{...x,statut:"terminée"}:x));
+    notify(`↩ Check-out — Chambre ${r.chambreId} libérée`,"ok");
+  };
+  const annuler=id=>{
+    const r=resas.find(x=>x.id===id);
+    if(!r||!window.confirm(`Annuler la réservation ${r.numero} ?`))return;
+    if(r.statut==="en cours")setChambres(p=>p.map(c=>c.id===r.chambreId?{...c,statut:"libre"}:c));
+    setResas(p=>p.map(x=>x.id===id?{...x,statut:"annulée"}:x));
+    notify(`Réservation ${r.numero} annulée`,"err");
+  };
+  const addResa=data=>{
+    const num=`2024-${String(resas.length+1).padStart(3,"0")}`;
+    const newR={...data,id:`R${String(resas.length+1).padStart(3,"0")}`,numero:num,statut:"confirmée"};
+    setResas(p=>[...p,newR]);
+    setChambres(p=>p.map(c=>c.id===data.chambreId?{...c,statut:"réservée"}:c));
+    setModal(null);notify(`Réservation ${num} créée`,"ok");
+  };
+  const addClient=data=>{
+    const newC={...data,id:`C${String(clients.length+1).padStart(3,"0")}`,fidelite:"Bronze",sejours:0};
+    setClients(p=>[...p,newC]);setModal(null);
+    notify(`Client ${data.nom} ${data.prenom} créé`,"ok");
+  };
+  const updateNote=(id,note)=>{
+    setResas(p=>p.map(x=>x.id===id?{...x,notes:note}:x));
+    setModal(null);
+    notify("Demande spéciale mise à jour","ok");
+  };
+  const updateStatutChambre=(cid,statut)=>{
+    setChambres(p=>p.map(c=>c.id===cid?{...c,statut}:c));
+    notify(`Chambre ${cid} → ${statut}`,"ok");
+  };
+
+  if(!user)return <LoginScreen
+    onLogin={u=>{setUser(u);setTab("dashboard");}}
+    onModeEnseignant={()=>{
+      const dir=STAFF.find(s=>s.role==="directeur");
+      if(dir){setUser(dir);setTab("parametrage");}
+    }}
+  />;
+  const arrivees=resas.filter(r=>r.arrivee===fmt(today)&&r.statut!=="annulée");
+  const departs=resas.filter(r=>r.depart===fmt(today)&&r.statut!=="annulée");
+  const enCours=resas.filter(r=>r.statut==="en cours").length;
+  const libres=chambres.filter(c=>c.statut==="libre").length;
+  const taux=Math.round(chambres.filter(c=>c.statut==="occupée"||c.statut==="réservée").length/chambres.length*100);
+
+  const TABS=[
+    {id:"dashboard",icon:"⊞",label:"Tableau de bord",roles:["receptionniste","manager","directeur"]},
+    {id:"resas",icon:"◷",label:"Réservations",roles:["receptionniste","manager","directeur"]},
+    {id:"chambres",icon:"⊡",label:"Chambres",roles:["receptionniste","manager","directeur"]},
+    {id:"clients",icon:"◉",label:"Clients",roles:["receptionniste","manager","directeur"]},
+    {id:"stats",icon:"◈",label:"Statistiques",roles:["manager","directeur"]},
+    {id:"parametrage",icon:"⚙",label:"Paramétrage",roles:["directeur"]},
+  ].filter(t=>t.roles.includes(user.role));
+
+  return(
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"#07121f",
+      backgroundImage:"radial-gradient(ellipse at 0% 0%,rgba(212,33,61,.05) 0%,transparent 40%)"}}>
+
+      {/* NOTIFICATION */}
+      {notif&&(
+        <div style={{position:"fixed",top:14,right:16,zIndex:9999,
+          background:notif.type==="ok"?"#0a2018":"#230a0a",
+          border:`1px solid ${notif.type==="ok"?"#3dbe7a":"#e05c5c"}40`,
+          borderLeft:`3px solid ${notif.type==="ok"?"#3dbe7a":"#e05c5c"}`,
+          borderRadius:7,padding:"10px 18px",fontSize:13,fontWeight:500,
+          color:notif.type==="ok"?"#3dbe7a":"#e05c5c",
+          boxShadow:"0 4px 20px rgba(0,0,0,.4)",animation:"fadeIn .25s ease",
+          maxWidth:360}}>
+          {notif.msg}
+        </div>
+      )}
+
+      {/* HEADER */}
+      <header className="no-print" style={{background:"rgba(8,18,30,.97)",
+        borderBottom:"1px solid rgba(255,255,255,.06)",
+        padding:"0 24px",display:"flex",alignItems:"center",height:58,gap:16,flexShrink:0}}>
+        <NovotelLogo compact/>
+        <div style={{width:1,height:28,background:"rgba(255,255,255,.08)"}}/>
+        <Meteo/>
+        <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:16}}>
+          <Clock/>
+          <div style={{width:1,height:28,background:"rgba(255,255,255,.08)"}}/>
+          {/* Profil utilisateur */}
+          <div style={{display:"flex",alignItems:"center",gap:9,cursor:"pointer"}}
+            onClick={()=>window.confirm("Se déconnecter ?")&&setUser(null)}>
+            <Avatar initials={user.avatar} color={RL[user.role]} size={30}/>
+            <div>
+              <div style={{fontSize:12,color:"#dde4ee",fontWeight:500,lineHeight:1.2}}>{user.nom}</div>
+              <div style={{fontSize:10.5,display:"flex",alignItems:"center",gap:4}}>
+                {badge(RL[user.role],user.poste)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* NAV */}
+      <nav className="no-print" style={{background:"rgba(8,15,26,.9)",
+        borderBottom:"1px solid rgba(255,255,255,.05)",padding:"0 20px",
+        display:"flex",gap:0,flexShrink:0,overflowX:"auto"}}>
+        {TABS.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{
+            padding:"11px 20px",background:"transparent",border:"none",
+            borderBottom:tab===t.id?"2px solid #D4213D":"2px solid transparent",
+            color:tab===t.id?"#dde4ee":"#4a5e72",fontSize:12.5,fontWeight:tab===t.id?600:400,
+            whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:5,
+          }}>
+            <span style={{fontSize:13}}>{t.icon}</span> {t.label}
+            {t.id==="stats"&&<span style={{fontSize:9,background:"#D4213D22",color:"#D4213D",
+              padding:"1px 5px",borderRadius:3,border:"1px solid #D4213D33"}}>MGR</span>}
+          </button>
+        ))}
+        {/* Shift info */}
+        <div style={{marginLeft:"auto",display:"flex",alignItems:"center",fontSize:11,color:"#2a3a4a",paddingRight:4}}>
+          Shift : {user.shift}
+        </div>
+      </nav>
+
+      {/* MAIN */}
+      <main style={{flex:1,padding:"20px 24px",overflowY:"auto",animation:"fadeIn .3s ease"}}>
+        {tab==="dashboard"&&(
+          <Dashboard resas={resas} chambres={chambres} clients={clients}
+            arrivees={arrivees} departs={departs} enCours={enCours}
+            taux={taux} libres={libres} user={user}
+            onCheckin={checkin} onCheckout={checkout}
+            onFacture={r=>setModal({type:"facture",data:r})}
+            onNote={r=>setModal({type:"note",data:r})}
+            getCh={getCh} getCl={getCl}/>
+        )}
+        {tab==="resas"&&(
+          <Reservations resas={resas} chambres={chambres} clients={clients}
+            onNew={()=>setModal({type:"newResa"})}
+            onCheckin={checkin} onCheckout={checkout} onAnnuler={annuler}
+            onFacture={r=>setModal({type:"facture",data:r})}
+            onNote={r=>setModal({type:"note",data:r})}
+            getCh={getCh} getCl={getCl}/>
+        )}
+        {tab==="chambres"&&(
+          <Chambres chambres={chambres} resas={resas} clients={clients}
+            onSelect={c=>setModal({type:"chambre",data:c})}/>
+        )}
+        {tab==="clients"&&(
+          <ClientsTab clients={clients} resas={resas}
+            onNew={()=>setModal({type:"newClient"})}/>
+        )}
+        {tab==="stats"&&canStats&&(
+          <Stats resas={resas} chambres={chambres} clients={clients}
+            getCh={getCh} getCl={getCl} user={user}/>
+        )}
+        {tab==="parametrage"&&user.role==="directeur"&&(
+          <Parametrage
+            hotel={HOTEL} staff={STAFF} chambresInit={chambres} clientsInit={clients}
+            onUpdateHotel={h=>{Object.assign(CONFIG.hotel,h);notify("Hôtel mis à jour — rechargez pour appliquer partout","ok");}}
+            onUpdateStaff={s=>{CONFIG.staff.splice(0,CONFIG.staff.length,...s);notify("Personnel mis à jour","ok");}}
+            onUpdateChambres={c=>{setChambres(c);notify("Chambres mises à jour","ok");}}
+            onUpdateClients={c=>{setClients(c);notify("Clients mis à jour","ok");}}
+          />
+        )}
+      </main>
+
+      {/* MODALS */}
+      {modal&&(
+        <ModalOverlay onClose={()=>setModal(null)}>
+          {modal.type==="newResa"&&<NewResaModal clients={clients} chambres={chambres} resas={resas} onSave={addResa} onClose={()=>setModal(null)}/>}
+          {modal.type==="newClient"&&<NewClientModal onSave={addClient} onClose={()=>setModal(null)}/>}
+          {modal.type==="chambre"&&<FicheChambreModal chambre={modal.data} resas={resas} clients={clients} onUpdate={(cid,s)=>{updateStatutChambre(cid,s);setModal(null);}} onClose={()=>setModal(null)}/>}
+          {modal.type==="facture"&&<FactureModal resa={modal.data} chambre={getCh(modal.data.chambreId)} client={getCl(modal.data.clientId)} onClose={()=>setModal(null)}/>}
+          {modal.type==="note"&&<NoteModal resa={modal.data} client={getCl(modal.data.clientId)} chambre={getCh(modal.data.chambreId)} onSave={updateNote} onClose={()=>setModal(null)}/>}
+        </ModalOverlay>
+      )}
+      {/* FOOTER COPYRIGHT */}
+      <footer className="no-print" style={{
+        borderTop:"1px solid rgba(255,255,255,.05)",
+        padding:"10px 24px",
+        display:"flex",alignItems:"center",justifyContent:"space-between",
+        flexShrink:0,flexWrap:"wrap",gap:6,
+      }}>
+        <div style={{fontSize:10.5,color:"#2a3a4a"}}>
+          © {new Date().getFullYear()} <span style={{color:"#3a5060"}}>{CONFIG.copyright.auteur} — {CONFIG.copyright.lycee}</span>
+          <span style={{margin:"0 8px",color:"#1a2a36"}}>·</span>
+          <span style={{color:"#2a3a4a"}}>Outil pédagogique — Usage scolaire exclusif</span>
+        </div>
+        <div style={{fontSize:10,color:"#1e2e3e",display:"flex",alignItems:"center",gap:6}}>
+          <span>PMS {CONFIG.hotel.nom} {CONFIG.hotel.ville} {CONFIG.copyright.version}</span>
+          <span style={{color:"#142030"}}>·</span>
+          <span>Non affilié au groupe Accor</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   LOGO NOVOTEL SVG
+══════════════════════════════════════════════════════ */
+function NovotelLogo({compact=false}){
+  return(
+    <svg width={compact?110:130} height={compact?34:40} viewBox="0 0 130 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="4" width="14" height="14" fill="#D4213D"/>
+      <rect x="0" y="20" width="7" height="7" fill="#D4213D" opacity="0.5"/>
+      <text x="20" y="18" fontFamily="'Inter',Arial,sans-serif" fontWeight="700" fontSize="17" fill="#FFFFFF" letterSpacing="0.3">novotel</text>
+      <text x="20" y="32" fontFamily="'Inter',Arial,sans-serif" fontWeight="400" fontSize="8.5" fill="#3a5060" letterSpacing="2">ACCOR · SORGUES</text>
+    </svg>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════════ */
+function Dashboard({resas,chambres,clients,arrivees,departs,enCours,taux,libres,user,onCheckin,onCheckout,onFacture,onNote,getCh,getCl}){
+  const kpis=[
+    {v:`${taux}%`,l:"Taux d'occupation",c:"#D4213D",sub:`${chambres.filter(c=>c.statut==="occupée").length}/${chambres.length} ch.`},
+    {v:libres,l:"Chambres libres",c:"#3dbe7a",sub:"disponibles ce soir"},
+    {v:enCours,l:"Clients en séjour",c:"#4a9fd4",sub:"actuellement"},
+    {v:arrivees.length,l:"Arrivées du jour",c:"#e8a030",sub:"à traiter"},
+    {v:departs.length,l:"Départs du jour",c:"#a07ad4",sub:"à encaisser"},
+  ];
+
+  const demandesActives=resas.filter(r=>r.notes&&r.notes.trim()&&r.statut!=="annulée"&&r.statut!=="terminée");
+
+  return(
+    <div>
+      {/* Bienvenue */}
+      <div style={{marginBottom:18}}>
+        <h1 style={{fontSize:17,fontWeight:600,color:"#dde4ee"}}>
+          Bonjour, {user.nom.split(" ")[0]} 👋
+        </h1>
+        <div style={{fontSize:12,color:"#4a5e72",marginTop:2}}>
+          {today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})} · Shift : {user.shift}
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:18}}>
+        {kpis.map(k=>(
+          <div key={k.l} style={{background:"rgba(12,22,36,.9)",
+            border:`1px solid ${k.c}18`,borderLeft:`3px solid ${k.c}`,
+            borderRadius:6,padding:"14px 16px"}}>
+            <div style={{fontSize:26,fontWeight:700,color:"#dde4ee",lineHeight:1.1,fontVariantNumeric:"tabular-nums"}}>{k.v}</div>
+            <div style={{fontSize:11,color:"#4a5e72",marginTop:3}}>{k.l}</div>
+            <div style={{fontSize:10.5,color:k.c,marginTop:1}}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── DEMANDES SPÉCIALES ── */}
+      {demandesActives.length>0&&(
+        <div style={{background:"rgba(18,14,6,.9)",border:"1px solid rgba(232,160,48,.25)",
+          borderLeft:"3px solid #e8a030",borderRadius:7,padding:"14px 18px",marginBottom:14}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+            <span style={{fontSize:14}}>⚠️</span>
+            <span style={{fontSize:11,fontWeight:700,color:"#e8a030",textTransform:"uppercase",letterSpacing:1}}>
+              Demandes spéciales
+            </span>
+            <span style={{background:"rgba(232,160,48,.15)",color:"#e8a030",
+              border:"1px solid rgba(232,160,48,.3)",borderRadius:20,
+              padding:"1px 8px",fontSize:11,fontWeight:700,marginLeft:2}}>
+              {demandesActives.length}
+            </span>
+            <span style={{fontSize:10.5,color:"#4a5e72",marginLeft:4}}>à prendre en compte avant ou pendant le séjour</span>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {demandesActives.map(r=>{
+              const cl=getCl(r.clientId);
+              const ch=getCh(r.chambreId);
+              const isUrgent=r.arrivee<=fmt(today)||r.statut==="en cours";
+              return(
+                <div key={r.id} style={{
+                  background:"rgba(232,160,48,.05)",
+                  border:`1px solid rgba(232,160,48,${isUrgent?".35":".15"})`,
+                  borderRadius:6,padding:"10px 14px",
+                  display:"flex",alignItems:"flex-start",gap:14,flexWrap:"wrap"
+                }}>
+                  {/* Indicateur urgence */}
+                  <div style={{
+                    width:4,height:"auto",alignSelf:"stretch",background:isUrgent?"#e8a030":"rgba(232,160,48,.3)",
+                    borderRadius:2,flexShrink:0,minHeight:36
+                  }}/>
+                  {/* Infos client */}
+                  <div style={{minWidth:130,flexShrink:0}}>
+                    <div style={{fontSize:12,fontWeight:700,color:"#dde4ee"}}>
+                      {cl?.nom} {cl?.prenom}
+                    </div>
+                    <div style={{fontSize:10.5,color:"#4a5e72",marginTop:1}}>
+                      Ch. <b style={{color:"#D4213D"}}>{r.chambreId}</b>
+                      {ch&&<span style={{color:"#3a5060"}}> · {ch.type}</span>}
+                    </div>
+                    <div style={{fontSize:10.5,color:"#4a5e72",marginTop:1}}>
+                      {fmtDate(r.arrivee)} → {fmtDate(r.depart)}
+                    </div>
+                  </div>
+                  {/* Statut */}
+                  <div style={{flexShrink:0,paddingTop:2}}>
+                    {badge(SR[r.statut],r.statut)}
+                    {isUrgent&&<div style={{fontSize:9.5,color:"#e8a030",marginTop:4,fontWeight:600}}>AUJOURD'HUI</div>}
+                  </div>
+                  {/* Note */}
+                  <div style={{flex:1,minWidth:160}}>
+                    <div style={{fontSize:10.5,color:"#4a5e72",marginBottom:3,textTransform:"uppercase",letterSpacing:.5}}>Note réception</div>
+                    <div style={{fontSize:12.5,color:"#e8c870",fontStyle:"italic",lineHeight:1.5}}>
+                      « {r.notes} »
+                    </div>
+                  </div>
+                  {/* Actions */}
+                  <div style={{flexShrink:0,display:"flex",flexDirection:"column",gap:5,alignItems:"flex-end"}}>
+                    <button style={{...S.btnGhost,fontSize:11,whiteSpace:"nowrap"}}
+                      onClick={()=>onNote(r)}>✏️ Modifier</button>
+                    {r.statut==="confirmée"&&r.arrivee<=fmt(today)&&
+                      <button style={{...S.btnAcc,fontSize:11}} onClick={()=>onCheckin(r.id)}>✓ Check-in</button>}
+                    {r.statut==="en cours"&&
+                      <button style={{...S.btnGhost,fontSize:11,color:"#e05c5c",borderColor:"rgba(224,92,92,.25)"}}
+                        onClick={()=>onCheckout(r.id)}>↩ Check-out</button>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+        <SectionArrivees resas={arrivees} onCheckin={onCheckin} getCh={getCh} getCl={getCl}/>
+        <SectionDeparts resas={departs} onCheckout={onCheckout} onFacture={onFacture} getCh={getCh} getCl={getCl}/>
+      </div>
+
+      {/* Plan des chambres */}
+      <div style={S.card}>
+        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+          ⊡ Plan des chambres
+          <div style={{display:"flex",gap:10,marginLeft:12}}>
+            {Object.entries(SC).map(([s,c])=>(
+              <span key={s} style={{display:"flex",alignItems:"center",gap:4,fontSize:10.5,color:"#4a5e72"}}>
+                <span style={{width:7,height:7,background:c,borderRadius:2,display:"inline-block"}}/>
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+          {chambres.map(c=>(
+            <div key={c.id} style={{width:58,height:58,background:`${SC[c.statut]}10`,
+              border:`1px solid ${SC[c.statut]}35`,borderTop:`2px solid ${SC[c.statut]}`,
+              borderRadius:4,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+              <div style={{fontSize:14,fontWeight:700,color:"#dde4ee",lineHeight:1}}>{c.id}</div>
+              <div style={{fontSize:8.5,color:"#4a5e72",marginTop:2}}>{c.type.split(" ")[0]}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionArrivees({resas,onCheckin,getCh,getCl}){
+  return(
+    <div style={S.card}>
+      <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+        ● Arrivées du jour <span style={{color:"#e8a030",marginLeft:4}}>{resas.length}</span>
+      </div>
+      {resas.length===0?<Vide msg="Aucune arrivée prévue"/>
+        :<table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+          <thead><tr>
+            {["Client","Ch.","Nuits","Statut",""].map(h=><th key={h} style={{...S.th,fontSize:10}}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+          {resas.map(r=>{
+            const cl=getCl(r.clientId);
+            return(<tr key={r.id}>
+              <td style={S.td}><b style={{fontSize:12}}>{cl?.nom}</b><br/><span style={{fontSize:10.5,color:"#4a5e72"}}>{cl?.prenom}</span></td>
+              <td style={S.td}><b style={{color:"#D4213D"}}>{r.chambreId}</b></td>
+              <td style={S.td}>{getNuits(r.arrivee,r.depart)}n</td>
+              <td style={S.td}>{badge(SR[r.statut],r.statut)}</td>
+              <td style={S.td}>
+                {r.statut==="confirmée"&&<button style={S.btnAcc} onClick={()=>onCheckin(r.id)}>✓ CI</button>}
+              </td>
+            </tr>);
+          })}
+          </tbody>
+        </table>}
+    </div>
+  );
+}
+
+function SectionDeparts({resas,onCheckout,onFacture,getCh,getCl}){
+  return(
+    <div style={S.card}>
+      <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+        ● Départs du jour <span style={{color:"#a07ad4",marginLeft:4}}>{resas.length}</span>
+      </div>
+      {resas.length===0?<Vide msg="Aucun départ prévu"/>
+        :<table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+          <thead><tr>
+            {["Client","Ch.","Statut","Actions"].map(h=><th key={h} style={{...S.th,fontSize:10}}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+          {resas.map(r=>{
+            const cl=getCl(r.clientId);
+            return(<tr key={r.id}>
+              <td style={S.td}><b style={{fontSize:12}}>{cl?.nom}</b><br/><span style={{fontSize:10.5,color:"#4a5e72"}}>{cl?.prenom}</span></td>
+              <td style={S.td}><b style={{color:"#D4213D"}}>{r.chambreId}</b></td>
+              <td style={S.td}>{badge(SR[r.statut],r.statut)}</td>
+              <td style={S.td}>
+                <button style={{...S.btnGhost,marginRight:4,fontSize:11}} onClick={()=>onFacture(r)}>💶 Fact.</button>
+                {r.statut==="en cours"&&<button style={{...S.btnAcc,fontSize:11}} onClick={()=>onCheckout(r.id)}>↩ CO</button>}
+              </td>
+            </tr>);
+          })}
+          </tbody>
+        </table>}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   RÉSERVATIONS
+══════════════════════════════════════════════════════ */
+function Reservations({resas,chambres,clients,onNew,onCheckin,onCheckout,onAnnuler,onFacture,onNote,getCh,getCl}){
+  const[filtre,setFiltre]=useState("tout");
+  const[search,setSearch]=useState("");
+  const filtered=useMemo(()=>resas.filter(r=>{
+    const cl=getCl(r.clientId);
+    const ok=search===""||`${cl?.nom} ${cl?.prenom}`.toLowerCase().includes(search.toLowerCase())||r.chambreId.includes(search)||r.numero.includes(search);
+    return ok&&(filtre==="tout"||r.statut===filtre);
+  }),[resas,filtre,search]);
+
+  return(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+        <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>Réservations <span style={{fontSize:12,color:"#4a5e72",fontWeight:400}}>— {filtered.length} résultat(s)</span></h2>
+        <button style={S.btnPrim} onClick={onNew}>+ Nouvelle réservation</button>
+      </div>
+
+      <div style={{display:"flex",gap:10,marginBottom:12,flexWrap:"wrap",alignItems:"center"}}>
+        <Inp style={{width:240}} placeholder="🔍 Client, chambre, numéro…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+          {[["tout","Toutes"],["confirmée","Confirmées"],["en cours","En cours"],["terminée","Terminées"],["annulée","Annulées"]].map(([v,l])=>(
+            <button key={v} style={{...S.btnGhost,color:filtre===v?"#dde4ee":"#4a5e72",
+              borderColor:filtre===v?"rgba(212,33,61,.5)":"rgba(255,255,255,.08)",
+              background:filtre===v?"rgba(212,33,61,.08)":"transparent"}}
+              onClick={()=>setFiltre(v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      <div style={S.card}>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",minWidth:720}}>
+            <thead><tr>{["N° Résa","Client","Chambre","Arrivée","Départ","Nuits","Pension","Total","Note","Statut","Actions"].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+            <tbody>
+            {filtered.map(r=>{
+              const cl=getCl(r.clientId);const ch=getCh(r.chambreId);
+              const n=getNuits(r.arrivee,r.depart);
+              const tot=calcTotal(ch,r);
+              const hasNote=r.notes&&r.notes.trim();
+              return(<tr key={r.id}>
+                <td style={S.td}><code style={{color:"#D4213D",fontSize:11}}>{r.numero}</code></td>
+                <td style={S.td}>
+                  <div style={{fontWeight:500}}>{cl?.nom} {cl?.prenom}</div>
+                  <div style={{fontSize:10.5,color:"#4a5e72"}}>{cl?.ville} · {cl?.pays}</div>
+                  {cl?.fidelite&&<span>{badge(FC[cl.fidelite]||"#888",cl.fidelite)}</span>}
+                </td>
+                <td style={S.td}>
+                  <b style={{color:"#D4213D"}}>{r.chambreId}</b>
+                  <div style={{fontSize:10.5,color:"#4a5e72"}}>{ch?.type}</div>
+                </td>
+                <td style={S.td}>{fmtDate(r.arrivee)}</td>
+                <td style={S.td}>{fmtDate(r.depart)}</td>
+                <td style={S.td}>{n}n</td>
+                <td style={S.td}>{r.pension}</td>
+                <td style={S.td}><b style={{color:"#dde4ee"}}>{tot>0?fmtEuro(tot*(1.1)):"—"}</b></td>
+                <td style={S.td}>
+                  <button
+                    onClick={()=>onNote(r)}
+                    title={hasNote?r.notes:"Ajouter une note"}
+                    style={{background:hasNote?"rgba(232,160,48,.12)":"rgba(255,255,255,.04)",
+                      border:`1px solid ${hasNote?"rgba(232,160,48,.35)":"rgba(255,255,255,.08)"}`,
+                      borderRadius:4,padding:"3px 8px",cursor:"pointer",
+                      color:hasNote?"#e8a030":"#3a5060",fontSize:13,lineHeight:1}}>
+                    {hasNote?"⚠️":"＋"}
+                  </button>
+                </td>
+                <td style={S.td}>{badge(SR[r.statut],r.statut)}</td>
+                <td style={S.td}>
+                  {r.statut==="confirmée"&&r.arrivee<=fmt(today)&&<button style={S.btnAcc} onClick={()=>onCheckin(r.id)}>✓ CI</button>}
+                  {r.statut==="en cours"&&<button style={{...S.btnGhost,color:"#e05c5c",borderColor:"rgba(224,92,92,.25)",marginRight:4}} onClick={()=>onCheckout(r.id)}>↩ CO</button>}
+                  <button style={{...S.btnGhost,fontSize:11,marginRight:4}} onClick={()=>onFacture(r)}>💶</button>
+                  {(r.statut==="confirmée"||r.statut==="en cours")&&<button style={{...S.btnGhost,color:"#e05c5c",fontSize:11}} onClick={()=>onAnnuler(r.id)}>✗</button>}
+                </td>
+              </tr>);
+            })}
+            {filtered.length===0&&<tr><td colSpan={10} style={{...S.td,textAlign:"center",color:"#2a3a4a",padding:28}}>Aucune réservation trouvée</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   CHAMBRES
+══════════════════════════════════════════════════════ */
+function Chambres({chambres,resas,clients,onSelect}){
+  const[ftType,setFtType]=useState("tout");
+  const[ftStatut,setFtStatut]=useState("tout");
+  const types=["tout",...new Set(chambres.map(c=>c.type))];
+  const filtered=chambres.filter(c=>(ftType==="tout"||c.type===ftType)&&(ftStatut==="tout"||c.statut===ftStatut));
+  return(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+        <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>Chambres <span style={{fontSize:12,color:"#4a5e72",fontWeight:400}}>— {filtered.length} affiché(s)</span></h2>
+        <div style={{display:"flex",gap:8,fontSize:10.5,flexWrap:"wrap"}}>
+          {Object.entries(SC).map(([s,c])=>(
+            <span key={s} style={{display:"flex",alignItems:"center",gap:4,color:"#4a5e72"}}>
+              <span style={{width:7,height:7,background:c,borderRadius:2,display:"inline-block"}}/>
+              {s} <b style={{color:c}}>{chambres.filter(ch=>ch.statut===s).length}</b>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:4,alignItems:"center"}}>
+          <span style={{fontSize:10.5,color:"#4a5e72"}}>TYPE :</span>
+          {types.map(t=><button key={t} style={{...S.btnGhost,color:ftType===t?"#dde4ee":"#4a5e72",background:ftType===t?"rgba(212,33,61,.08)":"transparent",borderColor:ftType===t?"rgba(212,33,61,.4)":"rgba(255,255,255,.07)"}} onClick={()=>setFtType(t)}>{t==="tout"?"Tous":t}</button>)}
+        </div>
+        <div style={{display:"flex",gap:4,alignItems:"center"}}>
+          <span style={{fontSize:10.5,color:"#4a5e72"}}>STATUT :</span>
+          {["tout","libre","occupée","réservée","maintenance"].map(s=><button key={s} style={{...S.btnGhost,color:ftStatut===s?"#dde4ee":"#4a5e72",background:ftStatut===s?"rgba(212,33,61,.08)":"transparent",borderColor:ftStatut===s?"rgba(212,33,61,.4)":"rgba(255,255,255,.07)"}} onClick={()=>setFtStatut(s)}>{s==="tout"?"Tous":s}</button>)}
+        </div>
+      </div>
+
+      <div style={{display:"flex",flexWrap:"wrap",gap:10}}>
+        {filtered.map(c=>(
+          <div key={c.id} onClick={()=>onSelect(c)} style={{width:120,
+            background:`${SC[c.statut]}0c`,border:`1px solid ${SC[c.statut]}30`,
+            borderTop:`2px solid ${SC[c.statut]}`,borderRadius:6,padding:"12px 14px",
+            cursor:"pointer",transition:"transform .15s"}}
+            onMouseEnter={e=>e.currentTarget.style.transform="translateY(-2px)"}
+            onMouseLeave={e=>e.currentTarget.style.transform="translateY(0)"}>
+            <div style={{fontSize:20,fontWeight:700,color:"#dde4ee"}}>{c.id}</div>
+            <div style={{fontSize:10.5,color:"#D4213D",fontWeight:600,marginTop:1}}>{c.type}</div>
+            <div style={{fontSize:10,color:"#4a5e72"}}>{c.literie}</div>
+            <div style={{fontSize:10,color:"#4a5e72"}}>Vue {c.vue}</div>
+            <div style={{fontSize:12,color:"#dde4ee",marginTop:5,fontWeight:600}}>{c.prix}€<span style={{fontSize:9,color:"#4a5e72"}}>/nuit</span></div>
+            <div style={{fontSize:9.5,color:SC[c.statut],marginTop:2,fontWeight:600}}>● {c.statut}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   CLIENTS
+══════════════════════════════════════════════════════ */
+function ClientsTab({clients,resas,onNew}){
+  const[search,setSearch]=useState("");
+  const filtered=useMemo(()=>clients.filter(c=>`${c.nom} ${c.prenom} ${c.email} ${c.ville}`.toLowerCase().includes(search.toLowerCase())),[clients,search]);
+  const nbResas=cid=>resas.filter(r=>r.clientId===cid&&r.statut!=="annulée").length;
+  return(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:10}}>
+        <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>Fichier clients <span style={{fontSize:12,color:"#4a5e72",fontWeight:400}}>— {clients.length} client(s)</span></h2>
+        <button style={S.btnPrim} onClick={onNew}>+ Nouveau client</button>
+      </div>
+      <Inp style={{width:280,marginBottom:12}} placeholder="🔍 Rechercher…" value={search} onChange={e=>setSearch(e.target.value)}/>
+      <div style={S.card}>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",minWidth:560}}>
+            <thead><tr>{["ID","Nom / Prénom","Contact","Localisation","Fidélité","Séjours"].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+            <tbody>
+            {filtered.map(c=>(
+              <tr key={c.id}>
+                <td style={S.td}><code style={{color:"#D4213D",fontSize:10.5}}>{c.id}</code></td>
+                <td style={S.td}>
+                  <Avatar initials={c.nom[0]+(c.prenom?.[0]||"")} size={26} color={FC[c.fidelite]||"#888"}/>
+                  <span style={{marginLeft:10}}>
+                    <b>{c.nom}</b> {c.prenom}
+                  </span>
+                </td>
+                <td style={S.td}><div>{c.email}</div><div style={{fontSize:10.5,color:"#4a5e72"}}>{c.tel}</div></td>
+                <td style={S.td}>{c.ville} <span style={{color:"#4a5e72"}}>· {c.pays}</span></td>
+                <td style={S.td}>{badge(FC[c.fidelite]||"#888",c.fidelite,true)}</td>
+                <td style={S.td}>
+                  <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",
+                    width:22,height:22,background:"rgba(212,33,61,.12)",color:"#D4213D",
+                    borderRadius:"50%",fontSize:11,fontWeight:700}}>{nbResas(c.id)}</span>
+                </td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   STATISTIQUES (Manager / Directeur uniquement)
+══════════════════════════════════════════════════════ */
+function Stats({resas,chambres,clients,getCh,getCl,user}){
+  const revChart=useRef(null);const occChart=useRef(null);const typeChart=useRef(null);
+  const revChartInst=useRef(null);const occChartInst=useRef(null);const typeChartInst=useRef(null);
+
+  /* Données mensuelles simulées + mois courant réel */
+  const moisLabels=["Jan","Fév","Mar","Avr","Mai","Jun","Jul","Aoû","Sep","Oct","Nov","Déc"];
+  const currentMonth=today.getMonth();
+
+  /* Revenus mensuels simulés (base Provence, pic estival) */
+  const revenusMensuels=[18500,16200,22400,28600,34200,48900,72400,68300,41200,29800,19400,15600];
+  /* Taux d'occupation mensuels */
+  const tauxMensuels=[52,48,62,71,78,88,97,95,74,65,55,45];
+  /* Ajouter les données temps réel du mois courant */
+  const revCurrentCalc=resas.filter(r=>r.statut!=="annulée").reduce((s,r)=>{
+    const ch=getCh(r.chambreId);return s+calcTotal(ch,r)*(1+0.10);
+  },0);
+  const revData=[...revenusMensuels];
+  revData[currentMonth]=Math.max(revCurrentCalc,revData[currentMonth]);
+
+  /* Répartition par type de chambre */
+  const typeCount={};
+  chambres.forEach(c=>{typeCount[c.type]=(typeCount[c.type]||0)+1;});
+
+  /* Top clients */
+  const topClients=useMemo(()=>{
+    return clients.map(c=>({
+      ...c,
+      totalRevenu:resas.filter(r=>r.clientId===c.id&&r.statut!=="annulée").reduce((s,r)=>{
+        const ch=getCh(r.chambreId);return s+calcTotal(ch,r)*(1.1);
+      },0)
+    })).sort((a,b)=>b.totalRevenu-a.totalRevenu).slice(0,5);
+  },[clients,resas,getCh]);
+
+  /* Montants globaux */
+  const totalTTC=resas.filter(r=>r.statut!=="annulée"&&r.statut!=="confirmée").reduce((s,r)=>{
+    const ch=getCh(r.chambreId);return s+calcTotal(ch,r)*(1.1);
+  },0);
+  const nResasActives=resas.filter(r=>r.statut!=="annulée").length;
+  const pmHotel=nResasActives>0?(totalTTC/nResasActives):0;
+  const revuePremium=resas.filter(r=>{const ch=getCh(r.chambreId);return ch&&ch.prix>=199&&r.statut!=="annulée";}).length;
+
+  /* Chart revenus */
+  useEffect(()=>{
+    if(!revChart.current)return;
+    if(revChartInst.current)revChartInst.current.destroy();
+    revChartInst.current=new Chart(revChart.current,{
+      type:"bar",
+      data:{
+        labels:moisLabels,
+        datasets:[{
+          label:"Revenus TTC (€)",
+          data:revData,
+          backgroundColor:revData.map((_,i)=>i===currentMonth?"rgba(212,33,61,.85)":"rgba(255,255,255,.08)"),
+          borderColor:revData.map((_,i)=>i===currentMonth?"#D4213D":"rgba(255,255,255,.15)"),
+          borderWidth:1,borderRadius:3,
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${Math.round(c.raw).toLocaleString("fr-FR")} €`}}},
+        scales:{
+          x:{grid:{color:"rgba(255,255,255,.04)"},ticks:{color:"#4a5e72",font:{size:11}}},
+          y:{grid:{color:"rgba(255,255,255,.04)"},ticks:{color:"#4a5e72",font:{size:11},callback:v=>`${(v/1000).toFixed(0)}k€`}},
+        }
+      }
+    });
+    return()=>{if(revChartInst.current)revChartInst.current.destroy();};
+  },[]);
+
+  /* Chart occupation */
+  useEffect(()=>{
+    if(!occChart.current)return;
+    if(occChartInst.current)occChartInst.current.destroy();
+    occChartInst.current=new Chart(occChart.current,{
+      type:"line",
+      data:{
+        labels:moisLabels,
+        datasets:[{
+          label:"Taux d'occupation %",
+          data:tauxMensuels,
+          borderColor:"#4a9fd4",backgroundColor:"rgba(74,159,212,.08)",
+          fill:true,tension:0.4,pointBackgroundColor:tauxMensuels.map((_,i)=>i===currentMonth?"#D4213D":"#4a9fd4"),
+          pointRadius:tauxMensuels.map((_,i)=>i===currentMonth?5:3),
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}%`}}},
+        scales:{
+          x:{grid:{color:"rgba(255,255,255,.04)"},ticks:{color:"#4a5e72",font:{size:11}}},
+          y:{min:0,max:100,grid:{color:"rgba(255,255,255,.04)"},ticks:{color:"#4a5e72",font:{size:11},callback:v=>`${v}%`}},
+        }
+      }
+    });
+    return()=>{if(occChartInst.current)occChartInst.current.destroy();};
+  },[]);
+
+  /* Chart répartition types */
+  useEffect(()=>{
+    if(!typeChart.current)return;
+    if(typeChartInst.current)typeChartInst.current.destroy();
+    typeChartInst.current=new Chart(typeChart.current,{
+      type:"doughnut",
+      data:{
+        labels:Object.keys(typeCount),
+        datasets:[{data:Object.values(typeCount),backgroundColor:["rgba(212,33,61,.7)","rgba(74,159,212,.7)","rgba(61,190,122,.7)","rgba(232,160,48,.7)"],borderColor:"rgba(0,0,0,.3)",borderWidth:2}]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:"bottom",labels:{color:"#7a8a9a",font:{size:11},padding:10}}},
+      }
+    });
+    return()=>{if(typeChartInst.current)typeChartInst.current.destroy();};
+  },[]);
+
+  const kpis=[
+    {v:fmtEuro(totalTTC),l:"CA TTC encaissé",c:"#3dbe7a",sub:"Séjours terminés & en cours"},
+    {v:`${Math.round(tauxMensuels[currentMonth])}%`,l:"Taux d'occu. mensuel",c:"#D4213D",sub:`${moisLabels[currentMonth]} — base historique`},
+    {v:fmtEuro(pmHotel),l:"Revenu moyen / réservation",c:"#4a9fd4",sub:"Hors annulations"},
+    {v:revuePremium,l:"Séjours Suite / Prestige",c:"#a07ad4",sub:"Chambres ≥ 199€/nuit"},
+  ];
+
+  return(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
+        <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>
+          Statistiques & Reporting
+          <span style={{fontSize:11,color:"#4a5e72",fontWeight:400,marginLeft:10}}>— Accès {user.role}</span>
+        </h2>
+        <div style={{fontSize:11,color:"#3a5a3a",background:"rgba(61,190,122,.08)",
+          border:"1px solid rgba(61,190,122,.2)",borderRadius:4,padding:"4px 10px"}}>
+          ↺ Données mises à jour en temps réel
+        </div>
+      </div>
+
+      {/* KPIs financiers */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10,marginBottom:18}}>
+        {kpis.map(k=>(
+          <div key={k.l} style={{background:"rgba(12,22,36,.9)",
+            border:`1px solid ${k.c}18`,borderLeft:`3px solid ${k.c}`,borderRadius:6,padding:"14px 16px"}}>
+            <div style={{fontSize:22,fontWeight:700,color:"#dde4ee",lineHeight:1.2}}>{k.v}</div>
+            <div style={{fontSize:11,color:"#4a5e72",marginTop:2}}>{k.l}</div>
+            <div style={{fontSize:10.5,color:k.c,marginTop:1}}>{k.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Graphiques */}
+      <div style={{display:"grid",gridTemplateColumns:"3fr 2fr",gap:14,marginBottom:14}}>
+        {/* Revenus */}
+        <div style={S.card}>
+          <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12,display:"flex",justifyContent:"space-between"}}>
+            Revenus mensuels (€ TTC)
+            <span style={{fontSize:10,background:"rgba(212,33,61,.12)",color:"#D4213D",padding:"2px 7px",borderRadius:3}}>
+              Mois courant : {moisLabels[currentMonth]}
+            </span>
+          </div>
+          <div style={{height:200}}>
+            <canvas ref={revChart}/>
+          </div>
+        </div>
+        {/* Répartition chambres */}
+        <div style={S.card}>
+          <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+            Répartition par type
+          </div>
+          <div style={{height:200}}>
+            <canvas ref={typeChart}/>
+          </div>
+        </div>
+      </div>
+
+      {/* Taux + Top clients */}
+      <div style={{display:"grid",gridTemplateColumns:"2fr 3fr",gap:14}}>
+        {/* Taux occupation */}
+        <div style={S.card}>
+          <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+            Taux d'occupation — 12 mois
+          </div>
+          <div style={{height:180}}>
+            <canvas ref={occChart}/>
+          </div>
+        </div>
+
+        {/* Top clients */}
+        <div style={S.card}>
+          <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+            Top clients — Chiffre d'affaires généré
+          </div>
+          <table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead><tr>{["#","Client","Fidélité","Séjours","CA TTC"].map(h=><th key={h} style={{...S.th,fontSize:10}}>{h}</th>)}</tr></thead>
+            <tbody>
+            {topClients.map((c,i)=>(
+              <tr key={c.id}>
+                <td style={S.td}>
+                  <span style={{fontSize:13,fontWeight:700,color:i===0?"#d4a830":i===1?"#a8a8c0":i===2?"#cd7f32":"#4a5e72"}}>
+                    {i+1}
+                  </span>
+                </td>
+                <td style={S.td}><b>{c.nom}</b> {c.prenom}<div style={{fontSize:10,color:"#4a5e72"}}>{c.ville}</div></td>
+                <td style={S.td}>{badge(FC[c.fidelite]||"#888",c.fidelite)}</td>
+                <td style={S.td}>{c.sejours}</td>
+                <td style={S.td}><b style={{color:"#3dbe7a"}}>{fmtEuro(c.totalRevenu)}</b></td>
+              </tr>
+            ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL — NOUVELLE RÉSERVATION
+══════════════════════════════════════════════════════ */
+function NewResaModal({clients,chambres,resas,onSave,onClose}){
+  const[form,setForm]=useState({clientId:clients[0]?.id||"",chambreId:"",arrivee:fmt(today),depart:fmt(addDays(today,1)),adultes:2,enfants:0,pension:"SA",notes:""});
+  const[disponibles,setDisponibles]=useState([]);const[searched,setSearched]=useState(false);
+  const set=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const chercher=()=>{
+    const arr=new Date(form.arrivee);const dep=new Date(form.depart);
+    const avail=chambres.filter(c=>{
+      if(c.statut==="maintenance")return false;
+      return!resas.some(r=>{
+        if(r.chambreId!==c.id||r.statut==="annulée"||r.statut==="terminée")return false;
+        return arr<new Date(r.depart)&&dep>new Date(r.arrivee);
+      });
+    });
+    setDisponibles(avail);setSearched(true);set("chambreId","");
+  };
+  const n=getNuits(form.arrivee,form.depart);
+  const ch=chambres.find(c=>c.id===form.chambreId);
+  const pen=PENSIONS.find(p=>p.code===form.pension)||{supp:0};
+  const ht=ch&&n>0?(ch.prix+pen.supp*form.adultes)*n:0;
+  const ttc=ht*(1+HOTEL.tva);
+  const canSave=form.clientId&&form.chambreId&&n>0;
+  return(
+    <div style={{background:"#0b1c2e",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,padding:26,width:"min(540px,92vw)"}}>
+      <MTitre icon="◷" title="Nouvelle réservation" onClose={onClose}/>
+      <div style={{marginBottom:12}}><Lbl>Client *</Lbl>
+        <Sel value={form.clientId} onChange={e=>set("clientId",e.target.value)}>
+          {clients.map(c=><option key={c.id} value={c.id}>{c.nom} {c.prenom} — {c.ville} ({c.fidelite})</option>)}
+        </Sel>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:4}}>
+        <div><Lbl>Arrivée *</Lbl><Inp type="date" value={form.arrivee} min={fmt(today)} onChange={e=>{set("arrivee",e.target.value);setSearched(false);}}/></div>
+        <div><Lbl>Départ *</Lbl><Inp type="date" value={form.depart} min={form.arrivee||fmt(today)} onChange={e=>{set("depart",e.target.value);setSearched(false);}}/></div>
+      </div>
+      {n>0&&<div style={{fontSize:12,color:"#D4213D",marginBottom:12}}>→ {n} nuit(s)</div>}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+        <div><Lbl>Adultes</Lbl><Inp type="number" min="1" max="4" value={form.adultes} onChange={e=>set("adultes",+e.target.value)}/></div>
+        <div><Lbl>Enfants</Lbl><Inp type="number" min="0" max="4" value={form.enfants} onChange={e=>set("enfants",+e.target.value)}/></div>
+      </div>
+      <button style={{...S.btnGhost,width:"100%",padding:"9px",marginBottom:12,textAlign:"center",fontSize:12}} onClick={chercher}>🔍 Vérifier les disponibilités</button>
+      {searched&&<div style={{marginBottom:12}}>
+        <Lbl>Chambre disponible * ({disponibles.length})</Lbl>
+        {disponibles.length===0?<p style={{color:"#e05c5c",fontSize:12}}>Aucune chambre disponible pour ces dates.</p>
+          :<div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+            {disponibles.map(c=>(
+              <div key={c.id} onClick={()=>set("chambreId",c.id)} style={{
+                padding:"7px 12px",borderRadius:5,cursor:"pointer",fontSize:12,
+                border:`1px solid ${form.chambreId===c.id?"#D4213D":"rgba(255,255,255,.1)"}`,
+                background:form.chambreId===c.id?"rgba(212,33,61,.1)":"rgba(255,255,255,.03)"}}>
+                <b style={{color:"#D4213D"}}>{c.id}</b> — {c.type}
+                <div style={{fontSize:10,color:"#4a5e72"}}>{c.vue} · {c.prix}€/nuit</div>
+              </div>
+            ))}
+          </div>}
+      </div>}
+      <div style={{marginBottom:12}}><Lbl>Formule pension</Lbl>
+        <Sel value={form.pension} onChange={e=>set("pension",e.target.value)}>
+          {PENSIONS.map(p=><option key={p.code} value={p.code}>{p.label}{p.supp>0?` (+${p.supp}€/pers/j)`:""}</option>)}
+        </Sel>
+      </div>
+      <div style={{marginBottom:12}}><Lbl>Notes / Demandes spéciales</Lbl><Inp placeholder="Ex : chambre calme, anniversaire…" value={form.notes} onChange={e=>set("notes",e.target.value)}/></div>
+      {ch&&ht>0&&(
+        <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:6,padding:"10px 14px",marginBottom:14,fontSize:12}}>
+          <Ligne l={`Hébergement ch. ${ch.id} × ${n}n`} v={`${ch.prix*n}€`}/>
+          {pen.supp>0&&<Ligne l={`${pen.label} × ${form.adultes}p × ${n}n`} v={`${pen.supp*form.adultes*n}€`}/>}
+          <div style={{borderTop:"1px solid rgba(255,255,255,.06)",marginTop:6,paddingTop:6}}>
+            <Ligne l="Total HT" v={`${ht.toFixed(2)}€`}/>
+            <Ligne l={`TVA ${(HOTEL.tva*100).toFixed(0)}%`} v={`${(ht*HOTEL.tva).toFixed(2)}€`}/>
+            <Ligne l="TOTAL TTC" v={fmtEuro(ttc)} gold/>
+          </div>
+        </div>
+      )}
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+        <button style={S.btnGhost} onClick={onClose}>Annuler</button>
+        <button style={{...S.btnPrim,opacity:canSave?1:.4}} disabled={!canSave} onClick={()=>canSave&&onSave(form)}>✓ Confirmer</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL — NOUVEAU CLIENT
+══════════════════════════════════════════════════════ */
+function NewClientModal({onSave,onClose}){
+  const[form,setForm]=useState({nom:"",prenom:"",email:"",tel:"",ville:"",pays:"France"});
+  const set=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const canSave=form.nom&&form.prenom&&form.email;
+  return(
+    <div style={{background:"#0b1c2e",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,padding:26,width:"min(440px,92vw)"}}>
+      <MTitre icon="◉" title="Nouveau client" onClose={onClose}/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+        <div><Lbl>Nom *</Lbl><Inp value={form.nom} onChange={e=>set("nom",e.target.value.toUpperCase())}/></div>
+        <div><Lbl>Prénom *</Lbl><Inp value={form.prenom} onChange={e=>set("prenom",e.target.value)}/></div>
+      </div>
+      <div style={{marginBottom:12}}><Lbl>Email *</Lbl><Inp type="email" value={form.email} onChange={e=>set("email",e.target.value)}/></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+        <div><Lbl>Téléphone</Lbl><Inp value={form.tel} onChange={e=>set("tel",e.target.value)}/></div>
+        <div><Lbl>Ville</Lbl><Inp value={form.ville} onChange={e=>set("ville",e.target.value)}/></div>
+      </div>
+      <div style={{marginBottom:18}}><Lbl>Pays</Lbl><Inp value={form.pays} onChange={e=>set("pays",e.target.value)}/></div>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+        <button style={S.btnGhost} onClick={onClose}>Annuler</button>
+        <button style={{...S.btnPrim,opacity:canSave?1:.4}} disabled={!canSave} onClick={()=>canSave&&onSave(form)}>✓ Créer</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL — FICHE CHAMBRE
+══════════════════════════════════════════════════════ */
+function FicheChambreModal({chambre,resas,clients,onUpdate,onClose}){
+  const actives=resas.filter(r=>r.chambreId===chambre.id&&r.statut!=="annulée"&&r.statut!=="terminée");
+  const getCl=id=>clients.find(c=>c.id===id);
+  return(
+    <div style={{background:"#0b1c2e",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,padding:26,width:"min(400px,92vw)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
+        <div>
+          <div style={{fontSize:24,fontWeight:700,color:"#dde4ee"}}>Chambre {chambre.id}</div>
+          <div style={{fontSize:12,color:"#4a5e72"}}>{chambre.type} · {chambre.literie} · Étage {chambre.etage}</div>
+        </div>
+        <span style={{background:SC[chambre.statut]+"18",color:SC[chambre.statut],border:`1px solid ${SC[chambre.statut]}40`,borderRadius:20,padding:"3px 12px",fontSize:11,fontWeight:600}}>● {chambre.statut}</span>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
+        {[["Vue",chambre.vue],["Capacité",`${chambre.cap} pers.`],["Tarif",`${chambre.prix}€/nuit`],["Étage",chambre.etage]].map(([l,v])=>(
+          <div key={l} style={{background:"rgba(255,255,255,.03)",borderRadius:4,padding:"7px 10px"}}>
+            <div style={{fontSize:9.5,color:"#4a5e72"}}>{l}</div>
+            <div style={{fontSize:12,fontWeight:500}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:6}}>ÉQUIPEMENTS</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+          {chambre.equip.map(e=><span key={e} style={{fontSize:10.5,background:"rgba(212,33,61,.08)",border:"1px solid rgba(212,33,61,.18)",borderRadius:20,padding:"2px 9px",color:"#e05272"}}>{e}</span>)}
+        </div>
+      </div>
+      {actives.length>0&&<div style={{marginBottom:14}}>
+        <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:6}}>RÉSERVATION ACTIVE</div>
+        {actives.map(r=>{const cl=getCl(r.clientId);return(
+          <div key={r.id} style={{background:"rgba(255,255,255,.03)",borderRadius:4,padding:"7px 10px",fontSize:12}}>
+            <b>{cl?.nom} {cl?.prenom}</b> · {fmtDate(r.arrivee)} → {fmtDate(r.depart)}
+          </div>
+        );})}
+      </div>}
+      <div style={{marginBottom:18}}>
+        <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:7}}>CHANGER LE STATUT</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {["libre","occupée","réservée","maintenance"].map(s=>(
+            <button key={s} style={{...S.btnGhost,color:SC[s],borderColor:SC[s]+"40",background:chambre.statut===s?SC[s]+"14":"transparent"}} onClick={()=>onUpdate(chambre.id,s)}>{s}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{textAlign:"right"}}><button style={S.btnGhost} onClick={onClose}>Fermer</button></div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MODAL — FACTURE
+══════════════════════════════════════════════════════ */
+function FactureModal({resa,chambre,client,onClose}){
+  if(!resa||!chambre||!client)return null;
+  const n=getNuits(resa.arrivee,resa.depart);
+  const pen=PENSIONS.find(p=>p.code===resa.pension)||{supp:0,label:resa.pension};
+  const hebergt=chambre.prix*n;
+  const pensTotal=pen.supp*(resa.adultes||1)*n;
+  const ht=hebergt+pensTotal;
+  const tvaAmt=ht*HOTEL.tva;
+  const ttc=ht+tvaAmt;
+  return(
+    <div style={{background:"#0b1c2e",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,padding:30,width:"min(460px,92vw)"}}>
+      {/* En-tête */}
+      <div style={{textAlign:"center",marginBottom:22,paddingBottom:18,borderBottom:"1px solid rgba(255,255,255,.07)"}}>
+        <NovotelLogo/>
+        <div style={{fontSize:11,color:"#3a5060",marginTop:4}}>{HOTEL.adresse}</div>
+        <div style={{fontSize:11,color:"#3a5060"}}>Tél : {HOTEL.tel} — {HOTEL.email}</div>
+        <div style={{fontSize:11,color:"#3a5060"}}>SIRET : {HOTEL.siret}</div>
+        <div style={{fontSize:16,fontWeight:700,color:"#dde4ee",marginTop:14,letterSpacing:2}}>FACTURE</div>
+        <div style={{fontSize:11.5,color:"#4a5e72"}}>N° {resa.numero} · {new Date().toLocaleDateString("fr-FR")}</div>
+      </div>
+      {/* Client */}
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:4}}>ADRESSÉE À</div>
+        <div style={{fontWeight:600,fontSize:13}}>{client.nom} {client.prenom}</div>
+        <div style={{fontSize:12,color:"#4a5e72"}}>{client.ville}, {client.pays} · {client.email}</div>
+      </div>
+      {/* Lignes */}
+      <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,marginBottom:12}}>
+        <thead><tr>{["Désignation","Qté","P.U. HT","Total HT"].map(h=><th key={h} style={{...S.th,textAlign:h==="Désignation"?"left":"right",fontSize:9.5}}>{h}</th>)}</tr></thead>
+        <tbody>
+          <tr>
+            <td style={S.td}>Hébergement — Ch. {chambre.id} {chambre.type}<br/>
+              <span style={{fontSize:10,color:"#4a5e72"}}>{fmtDate(resa.arrivee)} → {fmtDate(resa.depart)} · {resa.adultes} adulte(s)</span></td>
+            <td style={{...S.td,textAlign:"right"}}>{n}n</td>
+            <td style={{...S.td,textAlign:"right"}}>{chambre.prix}€</td>
+            <td style={{...S.td,textAlign:"right"}}>{hebergt}€</td>
+          </tr>
+          {pensTotal>0&&<tr>
+            <td style={S.td}>{pen.label}<br/><span style={{fontSize:10,color:"#4a5e72"}}>{resa.adultes||1} pers × {n}n</span></td>
+            <td style={{...S.td,textAlign:"right"}}>{(resa.adultes||1)*n}</td>
+            <td style={{...S.td,textAlign:"right"}}>{pen.supp}€</td>
+            <td style={{...S.td,textAlign:"right"}}>{pensTotal}€</td>
+          </tr>}
+        </tbody>
+      </table>
+      {/* Totaux */}
+      <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:5,padding:"10px 14px",marginBottom:18}}>
+        <Ligne l="Total HT" v={`${ht.toFixed(2)} €`}/>
+        <Ligne l={`TVA ${(HOTEL.tva*100).toFixed(0)}%`} v={`${tvaAmt.toFixed(2)} €`}/>
+        <div style={{borderTop:"1px solid rgba(255,255,255,.07)",marginTop:6,paddingTop:6}}>
+          <Ligne l="TOTAL TTC" v={fmtEuro(ttc)} gold/>
+        </div>
+      </div>
+      {resa.notes&&<div style={{fontSize:11,color:"#4a5e72",marginBottom:14,fontStyle:"italic"}}>Note : {resa.notes}</div>}
+      <div style={{fontSize:10.5,color:"#2a3a4a",textAlign:"center",marginBottom:18}}>Merci pour votre séjour au Novotel Sorgues · Paiement à la réception</div>
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+        <button style={S.btnGhost} onClick={onClose}>Fermer</button>
+        <button style={S.btnPrim} onClick={()=>window.print()}>🖨️ Imprimer</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   ONGLET PARAMÉTRAGE ENSEIGNANT
+══════════════════════════════════════════════════════ */
+function Parametrage({hotel,staff,chambresInit,clientsInit,onUpdateHotel,onUpdateStaff,onUpdateChambres,onUpdateClients}){
+  const[section,setSection]=useState("hotel");
+  const[hForm,setHForm]=useState({...hotel});
+  const[staffList,setStaffList]=useState([...STAFF]);
+  const[chambresList,setChambresList]=useState([...chambresInit]);
+  const[clientsList,setClientsList]=useState([...clientsInit]);
+  const[saved,setSaved]=useState(null);
+
+  const save=(type,data,fn)=>{fn(data);setSaved(type);setTimeout(()=>setSaved(null),2200);};
+
+  const SECTIONS=[
+    {id:"hotel",icon:"🏨",label:"Hôtel & identité"},
+    {id:"personnel",icon:"👤",label:"Personnel & accès"},
+    {id:"chambres",icon:"🛏",label:"Chambres"},
+    {id:"clients",icon:"📋",label:"Clients de départ"},
+  ];
+
+  const ROLES_OPTIONS=["receptionniste","manager","directeur"];
+  const LITERIES=["Double","Lits jumeaux","King Size","Simple","Twin"];
+  const TYPES_CH=["Standard","Supérieure","Suite Junior","Suite","Suite Prestige"];
+  const STATUTS_CH=["libre","occupée","réservée","maintenance"];
+  const VUES=["Jardin","Piscine","Mer","Rue","Panoramique","Cour","Montagne"];
+  const FIDELITES=["Bronze","Argent","Or","Platine"];
+
+  return(
+    <div>
+      <div style={{marginBottom:20}}>
+        <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600,marginBottom:4}}>
+          ⚙ Paramétrage de l'établissement
+        </h2>
+        <div style={{fontSize:12,color:"#4a5e72"}}>
+          Accès réservé au Directeur — les modifications sont appliquées immédiatement dans l'interface.
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:14}}>
+        {/* Sidebar sections */}
+        <div style={{width:180,flexShrink:0}}>
+          {SECTIONS.map(s=>(
+            <button key={s.id} onClick={()=>setSection(s.id)} style={{
+              display:"flex",alignItems:"center",gap:8,width:"100%",
+              padding:"10px 14px",marginBottom:4,borderRadius:6,border:"none",
+              textAlign:"left",fontSize:12.5,cursor:"pointer",
+              background:section===s.id?"rgba(212,33,61,.12)":"rgba(255,255,255,.03)",
+              color:section===s.id?"#dde4ee":"#5a6e82",
+              borderLeft:section===s.id?"3px solid #D4213D":"3px solid transparent",
+            }}>
+              <span style={{fontSize:14}}>{s.icon}</span> {s.label}
+            </button>
+          ))}
+
+          <div style={{marginTop:20,padding:"12px",background:"rgba(74,159,212,.06)",
+            border:"1px solid rgba(74,159,212,.15)",borderRadius:6,fontSize:10.5,color:"#3a6a8a"}}>
+            <div style={{fontWeight:600,marginBottom:4,color:"#4a9fd4"}}>💡 Astuce</div>
+            Connectez-vous avec le compte <b>durand</b> (Directeur) pour accéder à cet onglet.
+            Partagez le fichier modifié avec vos collègues.
+          </div>
+        </div>
+
+        {/* Contenu */}
+        <div style={{flex:1,minWidth:0}}>
+
+          {/* ── HÔTEL ── */}
+          {section==="hotel"&&(
+            <div style={S.card}>
+              <SectionTitle icon="🏨" title="Identité de l'hôtel"/>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+                <FG label="Nom de l'hôtel"><Inp value={hForm.nom} onChange={e=>setHForm(p=>({...p,nom:e.target.value}))}/></FG>
+                <FG label="Ville"><Inp value={hForm.ville} onChange={e=>setHForm(p=>({...p,ville:e.target.value}))}/></FG>
+                <FG label="Étoiles (1-5)"><Inp type="number" min="1" max="5" value={hForm.etoiles} onChange={e=>setHForm(p=>({...p,etoiles:+e.target.value}))}/></FG>
+                <FG label="TVA (ex: 0.10 = 10%)"><Inp type="number" step="0.01" value={hForm.tva} onChange={e=>setHForm(p=>({...p,tva:+e.target.value}))}/></FG>
+              </div>
+              <FG label="Adresse complète"><Inp value={hForm.adresse} onChange={e=>setHForm(p=>({...p,adresse:e.target.value}))}/></FG>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:12,marginBottom:12}}>
+                <FG label="Téléphone"><Inp value={hForm.tel} onChange={e=>setHForm(p=>({...p,tel:e.target.value}))}/></FG>
+                <FG label="Email"><Inp type="email" value={hForm.email} onChange={e=>setHForm(p=>({...p,email:e.target.value}))}/></FG>
+                <FG label="SIRET"><Inp value={hForm.siret} onChange={e=>setHForm(p=>({...p,siret:e.target.value}))}/></FG>
+                <FG label="Couleur principale (hex)">
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <input type="color" value={CONFIG.couleur}
+                      onChange={e=>{CONFIG.couleur=e.target.value;}}
+                      style={{width:36,height:34,borderRadius:5,border:"1px solid rgba(255,255,255,.1)",background:"transparent",cursor:"pointer"}}/>
+                    <Inp value={CONFIG.couleur} onChange={e=>{CONFIG.couleur=e.target.value;}} style={{flex:1}}/>
+                  </div>
+                </FG>
+              </div>
+              <SaveBtn saved={saved==="hotel"} onClick={()=>save("hotel",hForm,onUpdateHotel)}/>
+            </div>
+          )}
+
+          {/* ── PERSONNEL ── */}
+          {section==="personnel"&&(
+            <div style={S.card}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <SectionTitle icon="👤" title="Comptes du personnel"/>
+                <button style={S.btnPrim} onClick={()=>setStaffList(p=>[...p,{
+                  login:`user${p.length+1}`,mdp:"1234",nom:"Nouveau Agent",
+                  poste:"Réceptionniste",role:"receptionniste",shift:"Matin (6h–14h)",avatar:"NA"
+                }])}>+ Ajouter</button>
+              </div>
+              <div style={{fontSize:11,color:"#4a5e72",marginBottom:12}}>
+                Rôles : <b style={{color:"#4a9fd4"}}>receptionniste</b> (opérations) · <b style={{color:"#e8a030"}}>manager</b> (+ statistiques) · <b style={{color:"#a070d0"}}>directeur</b> (+ paramétrage)
+              </div>
+              {staffList.map((ag,i)=>(
+                <div key={i} style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.06)",
+                  borderRadius:6,padding:"12px 14px",marginBottom:8}}>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:8}}>
+                    <FG label="Nom complet"><Inp value={ag.nom} onChange={e=>{const l=[...staffList];l[i]={...l[i],nom:e.target.value,avatar:e.target.value.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase()};setStaffList(l);}}/></FG>
+                    <FG label="Login"><Inp value={ag.login} onChange={e=>{const l=[...staffList];l[i]={...l[i],login:e.target.value.toLowerCase()};setStaffList(l);}}/></FG>
+                    <FG label="Mot de passe"><Inp value={ag.mdp} onChange={e=>{const l=[...staffList];l[i]={...l[i],mdp:e.target.value};setStaffList(l);}}/></FG>
+                    <FG label="Poste affiché"><Inp value={ag.poste} onChange={e=>{const l=[...staffList];l[i]={...l[i],poste:e.target.value};setStaffList(l);}}/></FG>
+                    <FG label="Rôle système">
+                      <Sel value={ag.role} onChange={e=>{const l=[...staffList];l[i]={...l[i],role:e.target.value};setStaffList(l);}}>
+                        {ROLES_OPTIONS.map(r=><option key={r} value={r}>{r}</option>)}
+                      </Sel>
+                    </FG>
+                    <FG label="Horaire affiché"><Inp value={ag.shift} onChange={e=>{const l=[...staffList];l[i]={...l[i],shift:e.target.value};setStaffList(l);}}/></FG>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <button style={{...S.btnGhost,color:"#e05c5c",fontSize:11}} onClick={()=>setStaffList(p=>p.filter((_,j)=>j!==i))}>✗ Supprimer</button>
+                  </div>
+                </div>
+              ))}
+              <SaveBtn saved={saved==="staff"} onClick={()=>save("staff",staffList,onUpdateStaff)}/>
+            </div>
+          )}
+
+          {/* ── CHAMBRES ── */}
+          {section==="chambres"&&(
+            <div style={S.card}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <SectionTitle icon="🛏" title={`Chambres (${chambresList.length})`}/>
+                <button style={S.btnPrim} onClick={()=>setChambresList(p=>[...p,{
+                  id:`${p.length+101}`,type:"Standard",etage:1,literie:"Double",cap:2,prix:89,
+                  vue:"Jardin",statut:"libre",equip:["Wi-Fi","TV"]
+                }])}>+ Ajouter</button>
+              </div>
+              <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:700}}>
+                <thead><tr>{["N°","Type","Ét.","Literie","Cap.","Prix/n","Vue","Statut","Équip.",""].map(h=><th key={h} style={{...S.th,fontSize:10}}>{h}</th>)}</tr></thead>
+                <tbody>
+                {chambresList.map((c,i)=>(
+                  <tr key={i}>
+                    <td style={S.td}><Inp value={c.id} style={{width:50}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],id:e.target.value};setChambresList(l);}}/></td>
+                    <td style={S.td}>
+                      <Sel value={c.type} style={{minWidth:110}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],type:e.target.value};setChambresList(l);}}>
+                        {TYPES_CH.map(t=><option key={t}>{t}</option>)}
+                      </Sel>
+                    </td>
+                    <td style={S.td}><Inp type="number" value={c.etage} style={{width:46}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],etage:+e.target.value};setChambresList(l);}}/></td>
+                    <td style={S.td}>
+                      <Sel value={c.literie} style={{minWidth:100}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],literie:e.target.value};setChambresList(l);}}>
+                        {LITERIES.map(t=><option key={t}>{t}</option>)}
+                      </Sel>
+                    </td>
+                    <td style={S.td}><Inp type="number" value={c.cap} style={{width:46}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],cap:+e.target.value};setChambresList(l);}}/></td>
+                    <td style={S.td}><Inp type="number" value={c.prix} style={{width:62}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],prix:+e.target.value};setChambresList(l);}}/></td>
+                    <td style={S.td}>
+                      <Sel value={c.vue} style={{minWidth:90}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],vue:e.target.value};setChambresList(l);}}>
+                        {VUES.map(t=><option key={t}>{t}</option>)}
+                      </Sel>
+                    </td>
+                    <td style={S.td}>
+                      <Sel value={c.statut} style={{minWidth:100}} onChange={e=>{const l=[...chambresList];l[i]={...l[i],statut:e.target.value};setChambresList(l);}}>
+                        {STATUTS_CH.map(t=><option key={t} style={{color:SC[t]}}>{t}</option>)}
+                      </Sel>
+                    </td>
+                    <td style={S.td}>
+                      <Inp value={(c.equip||[]).join(", ")} style={{minWidth:140}}
+                        placeholder="Wi-Fi, TV, Clim…"
+                        onChange={e=>{const l=[...chambresList];l[i]={...l[i],equip:e.target.value.split(",").map(x=>x.trim()).filter(Boolean)};setChambresList(l);}}/>
+                    </td>
+                    <td style={S.td}><button style={{...S.btnGhost,color:"#e05c5c",fontSize:11,marginRight:0}} onClick={()=>setChambresList(p=>p.filter((_,j)=>j!==i))}>✗</button></td>
+                  </tr>
+                ))}
+                </tbody>
+              </table>
+              </div>
+              <div style={{fontSize:10.5,color:"#3a5060",marginTop:8,marginBottom:12}}>Les équipements se saisissent séparés par des virgules : <i>Wi-Fi, TV, Climatisation, Mini-bar…</i></div>
+              <SaveBtn saved={saved==="chambres"} onClick={()=>save("chambres",chambresList,onUpdateChambres)}/>
+            </div>
+          )}
+
+          {/* ── CLIENTS ── */}
+          {section==="clients"&&(
+            <div style={S.card}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+                <SectionTitle icon="📋" title={`Clients de départ (${clientsList.length})`}/>
+                <button style={S.btnPrim} onClick={()=>setClientsList(p=>[...p,{
+                  id:`C${String(p.length+1).padStart(3,"0")}`,nom:"NOM",prenom:"Prénom",
+                  email:"email@exemple.fr",tel:"06 00 00 00 00",ville:"Paris",pays:"France",fidelite:"Bronze",sejours:0
+                }])}>+ Ajouter</button>
+              </div>
+              <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:700}}>
+                <thead><tr>{["ID","Nom","Prénom","Email","Téléphone","Ville","Pays","Fidélité","Séjours",""].map(h=><th key={h} style={{...S.th,fontSize:10}}>{h}</th>)}</tr></thead>
+                <tbody>
+                {clientsList.map((c,i)=>(
+                  <tr key={i}>
+                    <td style={S.td}><code style={{color:"#D4213D",fontSize:10.5}}>{c.id}</code></td>
+                    <td style={S.td}><Inp value={c.nom} style={{minWidth:80}} onChange={e=>{const l=[...clientsList];l[i]={...l[i],nom:e.target.value.toUpperCase()};setClientsList(l);}}/></td>
+                    <td style={S.td}><Inp value={c.prenom} style={{minWidth:80}} onChange={e=>{const l=[...clientsList];l[i]={...l[i],prenom:e.target.value};setClientsList(l);}}/></td>
+                    <td style={S.td}><Inp value={c.email} style={{minWidth:130}} onChange={e=>{const l=[...clientsList];l[i]={...l[i],email:e.target.value};setClientsList(l);}}/></td>
+                    <td style={S.td}><Inp value={c.tel} style={{minWidth:110}} onChange={e=>{const l=[...clientsList];l[i]={...l[i],tel:e.target.value};setClientsList(l);}}/></td>
+                    <td style={S.td}><Inp value={c.ville} style={{minWidth:80}} onChange={e=>{const l=[...clientsList];l[i]={...l[i],ville:e.target.value};setClientsList(l);}}/></td>
+                    <td style={S.td}><Inp value={c.pays} style={{minWidth:80}} onChange={e=>{const l=[...clientsList];l[i]={...l[i],pays:e.target.value};setClientsList(l);}}/></td>
+                    <td style={S.td}>
+                      <Sel value={c.fidelite} onChange={e=>{const l=[...clientsList];l[i]={...l[i],fidelite:e.target.value};setClientsList(l);}}>
+                        {FIDELITES.map(f=><option key={f}>{f}</option>)}
+                      </Sel>
+                    </td>
+                    <td style={S.td}><Inp type="number" min="0" value={c.sejours} style={{width:54}} onChange={e=>{const l=[...clientsList];l[i]={...l[i],sejours:+e.target.value};setClientsList(l);}}/></td>
+                    <td style={S.td}><button style={{...S.btnGhost,color:"#e05c5c",fontSize:11,marginRight:0}} onClick={()=>setClientsList(p=>p.filter((_,j)=>j!==i))}>✗</button></td>
+                  </tr>
+                ))}
+                </tbody>
+              </table>
+              </div>
+              <SaveBtn saved={saved==="clients"} onClick={()=>save("clients",clientsList,onUpdateClients)}/>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({icon,title}){
+  return <div style={{fontSize:13,fontWeight:600,color:"#dde4ee",marginBottom:14,display:"flex",alignItems:"center",gap:6}}><span>{icon}</span>{title}</div>;
+}
+function FG({label,children}){
+  return <div style={{marginBottom:0}}><Lbl>{label}</Lbl>{children}</div>;
+}
+function SaveBtn({onClick,saved}){
+  return(
+    <div style={{display:"flex",alignItems:"center",gap:10,marginTop:16,paddingTop:14,borderTop:"1px solid rgba(255,255,255,.06)"}}>
+      <button style={{...S.btnPrim,minWidth:160}} onClick={onClick}>✓ Enregistrer les modifications</button>
+      {saved&&<span style={{fontSize:12,color:"#3dbe7a",animation:"fadeIn .2s ease"}}>✓ Modifications appliquées</span>}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+══════════════════════════════════════════════════════ */
+function NoteModal({resa,client,chambre,onSave,onClose}){
+  const[note,setNote]=useState(resa.notes||"");
+  const SUGGESTIONS=[
+    "Anniversaire de mariage — préparer cadeau bienvenue",
+    "Chambre calme côté jardin souhaitée",
+    "Cliente Platine — panier bienvenue + surclassement si disponible",
+    "Allergie alimentaire : sans gluten",
+    "Bébé — lit bébé à installer avant arrivée",
+    "Check-in tardif prévu (après 22h)",
+    "Besoin d'une facture au nom de la société",
+    "Demande de room service quotidien",
+    "Mobilité réduite — chambre accessible PMR",
+  ];
+  return(
+    <div style={{background:"#0b1c2e",border:"1px solid rgba(232,160,48,.25)",
+      borderTop:"3px solid #e8a030",borderRadius:10,padding:26,width:"min(480px,92vw)"}}>
+      <MTitre icon="⚠️" title="Demande spéciale" onClose={onClose}/>
+
+      {/* Contexte réservation */}
+      <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",
+        borderRadius:6,padding:"10px 14px",marginBottom:16,
+        display:"flex",gap:16,flexWrap:"wrap",fontSize:12}}>
+        <div>
+          <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:2}}>CLIENT</div>
+          <div style={{fontWeight:600,color:"#dde4ee"}}>{client?.nom} {client?.prenom}</div>
+          <div style={{fontSize:10.5,color:"#4a5e72"}}>{client?.ville} · {badge(FC[client?.fidelite]||"#888",client?.fidelite||"—")}</div>
+        </div>
+        <div>
+          <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:2}}>CHAMBRE</div>
+          <div style={{fontWeight:600,color:"#D4213D"}}>{resa.chambreId}</div>
+          <div style={{fontSize:10.5,color:"#4a5e72"}}>{chambre?.type}</div>
+        </div>
+        <div>
+          <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:2}}>SÉJOUR</div>
+          <div style={{color:"#dde4ee"}}>{fmtDate(resa.arrivee)} → {fmtDate(resa.depart)}</div>
+          <div style={{fontSize:10.5,color:"#4a5e72"}}>{getNuits(resa.arrivee,resa.depart)} nuit(s) · {resa.adultes} adulte(s)</div>
+        </div>
+        <div style={{paddingTop:2}}>
+          {badge(SR[resa.statut],resa.statut)}
+        </div>
+      </div>
+
+      {/* Champ note */}
+      <div style={{marginBottom:12}}>
+        <Lbl>Note / demande spéciale</Lbl>
+        <textarea
+          value={note}
+          onChange={e=>setNote(e.target.value)}
+          placeholder="Ex : Anniversaire de mariage, allergie, lit bébé…"
+          rows={3}
+          style={{...S.input,resize:"vertical",lineHeight:1.6,
+            background:"rgba(232,160,48,.04)",
+            border:"1px solid rgba(232,160,48,.25)"}}
+        />
+      </div>
+
+      {/* Suggestions rapides */}
+      <div style={{marginBottom:18}}>
+        <div style={{fontSize:9.5,color:"#4a5e72",marginBottom:6,textTransform:"uppercase",letterSpacing:.5}}>
+          Suggestions rapides
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+          {SUGGESTIONS.map(s=>(
+            <button key={s}
+              onClick={()=>setNote(s)}
+              style={{fontSize:10.5,background:"rgba(255,255,255,.04)",
+                border:"1px solid rgba(255,255,255,.08)",borderRadius:4,
+                padding:"3px 9px",color:"#5a7a8a",cursor:"pointer",
+                textAlign:"left"}}>
+              {s.length>40?s.slice(0,38)+"…":s}
+            </button>
+          ))}
+          {note&&<button onClick={()=>setNote("")}
+            style={{fontSize:10.5,background:"rgba(224,92,92,.07)",
+              border:"1px solid rgba(224,92,92,.2)",borderRadius:4,
+              padding:"3px 9px",color:"#e05c5c",cursor:"pointer"}}>
+            ✗ Effacer
+          </button>}
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+        <button style={S.btnGhost} onClick={onClose}>Annuler</button>
+        <button style={S.btnPrim} onClick={()=>onSave(resa.id,note)}>✓ Enregistrer</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+══════════════════════════════════════════════════════ */
+function ModalOverlay({children,onClose}){
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",display:"flex",alignItems:"flex-start",
+      justifyContent:"center",zIndex:1000,padding:"28px 14px",overflowY:"auto"}}
+      onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      {children}
+    </div>
+  );
+}
+function MTitre({icon,title,onClose}){
+  return(
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+      <h3 style={{fontSize:15,color:"#dde4ee",fontWeight:600}}>{icon} {title}</h3>
+      <button style={{background:"transparent",border:"none",color:"#4a5e72",fontSize:17,lineHeight:1}} onClick={onClose}>✕</button>
+    </div>
+  );
+}
+function Vide({msg}){return <p style={{color:"#2a3a4a",fontSize:12,padding:"10px 0"}}>{msg}</p>;}
+function Ligne({l,v,bold,gold}){
+  return(
+    <div style={{display:"flex",justifyContent:"space-between",fontSize:bold?13:12,
+      color:gold?"#3dbe7a":bold?"#dde4ee":"#4a5e72",fontWeight:bold?600:400,marginBottom:3}}>
+      <span>{l}</span><span>{v}</span>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════
+   MOUNT
+══════════════════════════════════════════════════════ */
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
