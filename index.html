@@ -665,6 +665,7 @@ const confirmCheckout=id=>{
           {modal.type==="newResa"&&<NewResaModal clients={clients} chambres={chambres} resas={resas} onSave={addResa} onClose={()=>setModal(null)}/>}
           {modal.type==="newClient"&&<NewClientModal onSave={addClient} onClose={()=>setModal(null)}/>}
           {modal.type==="chambre"&&<FicheChambreModal chambre={modal.data} resas={resas} clients={clients} onUpdate={(cid,s)=>{updateStatutChambre(cid,s);setModal(null);}} onClose={()=>setModal(null)}/>}
+         {modal.type==="checkoutFacture"&&<FactureModal resa={modal.data.resa} chambre={modal.data.chambre} client={modal.data.client} hotel={hotelConfig} onClose={()=>setModal(null)} onCheckout={()=>confirmCheckout(modal.data.resa.id)}/>}
           {modal.type==="facture"&&<FactureModal resa={modal.data} chambre={getCh(modal.data.chambreId)} client={getCl(modal.data.clientId)} hotel={hotelConfig} onClose={()=>setModal(null)}/>}
           {modal.type==="note"&&<NoteModal resa={modal.data} client={getCl(modal.data.clientId)} chambre={getCh(modal.data.chambreId)} onSave={updateNote} onClose={()=>setModal(null)}/>}
         </ModalOverlay>
