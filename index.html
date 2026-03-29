@@ -484,8 +484,15 @@ function App(){
 
   const checkin=id=>{
     const r=resas.find(x=>x.id===id);if(!r)return;
+    const cl=getCl(r.clientId);
+    const ch=getCh(r.chambreId);
+    setModal({type:"checkinProcedure",data:{resa:r,client:cl,chambre:ch}});
+  };
+const confirmCheckin=id=>{
+    const r=resas.find(x=>x.id===id);if(!r)return;
     setChambres(p=>p.map(c=>c.id===r.chambreId?{...c,statut:"occupée"}:c));
     setResas(p=>p.map(x=>x.id===id?{...x,statut:"en cours"}:x));
+    setModal({type:"confirmationCheckin",data:{chambreId:r.chambreId,client:getCl(r.clientId)}});
     notify(`✓ Check-in — Chambre ${r.chambreId} (${getCl(r.clientId)?.nom})`,"ok");
   };
  const checkout=id=>{
