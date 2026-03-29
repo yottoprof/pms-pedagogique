@@ -486,9 +486,9 @@ function App(){
     const r=resas.find(x=>x.id===id);if(!r)return;
     const cl=getCl(r.clientId);
     const ch=getCh(r.chambreId);
-    setModal({type:"checkinProcedure",data:{resa:r,client:cl,chambre:ch}});
+setModal({type:"fichePolice",data:{resa:r,client:cl,chambre:ch}});
   };
-const confirmCheckin=id=>{
+const confirmCheckin=(id,fichePolice)=>{
     const r=resas.find(x=>x.id===id);if(!r)return;
     setChambres(p=>p.map(c=>c.id===r.chambreId?{...c,statut:"occupée"}:c));
     setResas(p=>p.map(x=>x.id===id?{...x,statut:"en cours"}:x));
