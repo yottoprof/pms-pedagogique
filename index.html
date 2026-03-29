@@ -680,15 +680,6 @@ const confirmCheckout=id=>{
     <div style={{background:"rgba(212,33,61,.06)",border:"1px solid rgba(212,33,61,.2)",borderRadius:8,padding:"12px 16px",marginBottom:16,fontSize:12,color:"#e8a030"}}>
       ⚠️ Document obligatoire — Article R.611-42 du Code de l'entrée et du séjour des étrangers
     </div>
-    <FichePoliceForm
-      client={modal.data.client}
-      chambre={modal.data.chambre}
-      resa={modal.data.resa}
-      onValider={(fichePolice)=>{
-        confirmCheckin(modal.data.resa.id, fichePolice);
-      }}
-      onClose={()=>setModal(null)}
-    />
   </div>
 )}
 {modal.type==="fichePolice"&&(
