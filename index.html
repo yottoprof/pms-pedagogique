@@ -87,11 +87,13 @@ const CONFIG = {
   /* ── 5. PERSONNEL (comptes de connexion) ───────────────────── */
   // Rôles disponibles : "receptionniste" | "manager" | "directeur"
   // Le directeur voit tout. Le manager voit les stats. Le réceptionniste : opérations.
-  staff: [
-    { login:"blanc",  mdp:"1234", nom:"Marie BLANC",    poste:"Réceptionniste",    role:"receptionniste", shift:"Matin (6h–14h)",    avatar:"MB" },
-    { login:"roux",   mdp:"1234", nom:"Thomas ROUX",     poste:"Réceptionniste",    role:"receptionniste", shift:"Soir (14h–22h)",     avatar:"TR" },
-    { login:"martin", mdp:"9999", nom:"Camille MARTIN",  poste:"Chef de réception", role:"manager",        shift:"Journée (9h–18h)",   avatar:"CM" },
-    { login:"durand", mdp:"0000", nom:"Paul DURAND",     poste:"Directeur",         role:"directeur",      shift:"Direction",          avatar:"PD", hidden:true },
+ staff: [
+    { login:"reception1", mdp:"hotel2024", nom:"Réceptionniste A",      poste:"Réceptionniste",        role:"receptionniste", shift:"Matin (6h–14h)",    avatar:"RA" },
+    { login:"reception2", mdp:"hotel2024", nom:"Réceptionniste B",      poste:"Réceptionniste",        role:"receptionniste", shift:"Soir (14h–22h)",     avatar:"RB" },
+    { login:"concierge",  mdp:"hotel2024", nom:"Concierge",             poste:"Concierge",             role:"receptionniste", shift:"Journée (9h–18h)",   avatar:"CO" },
+    { login:"commercial", mdp:"hotel2024", nom:"Commercial Séminaires", poste:"Commercial Séminaires", role:"manager",        shift:"Journée (9h–18h)",   avatar:"CS" },
+    { login:"manager",    mdp:"hotel2024", nom:"Chef de réception",     poste:"Chef de réception",     role:"manager",        shift:"Journée (9h–18h)",   avatar:"CR" },
+    { login:"direction",  mdp:"hotel2024", nom:"Directeur",             poste:"Directeur",             role:"directeur",      shift:"Direction",          avatar:"DI", hidden:true },
   ],
 
   /* ── 6. PENSIONS / RESTAURATION ───────────────────────────── */
