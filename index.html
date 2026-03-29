@@ -1917,7 +1917,94 @@ function Ligne({l,v,bold,gold}){
 /* ══════════════════════════════════════════════════════
    MOUNT
 ══════════════════════════════════════════════════════ */
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+/* ══════════════════════════════════════════════════════
+   AUTHENTIFICATION FIREBASE
+══════════════════════════════════════════════════════ */
+function FirebaseLoginScreen({onAuthenticated}){
+  const[email,setEmail]=useState("");
+  const[mdp,setMdp]=useState("");
+  const[err,setErr]=useState("");
+  const[loading,setLoading]=useState(false);
+
+  const handleLogin=async()=>{
+    setErr("");setLoading(true);
+    try{
+      await firebase.auth().signInWithEmailAndPassword(email,mdp);
+      onAuthenticated();
+    }catch(e){
+      setErr("Identifiant ou mot de passe incorrect.");
+      setLoading(false);
+    }
+  };
+
+  return(
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",
+      background:"#06111f",backgroundImage:"radial-gradient(ellipse at 20% 50%,rgba(212,33,61,.08) 0%,transparent 55%)"}}>
+      <div style={{width:"min(380px,92vw)",background:"rgba(12,22,36,.98)",
+        border:"1px solid rgba(255,255,255,.09)",borderRadius:12,padding:"36px 32px",
+        boxShadow:"0 24px 60px rgba(0,0,0,.5)"}}>
+        <div style={{textAlign:"center",marginBottom:28}}>
+          <div style={{fontSize:32,marginBottom:8}}>🏨</div>
+          <div style={{fontSize:11,color:"#5a6e82",textTransform:"uppercase",letterSpacing:2,marginBottom:4}}>
+            PMS Pédagogique
+          </div>
+          <h2 style={{fontSize:17,color:"#dde4ee",fontWeight:600}}>Accès sécurisé</h2>
+          <div style={{fontSize:11,color:"#3a5060",marginTop:4}}>Lycée Victor Hugo — Carpentras</div>
+        </div>
+        <div style={{marginBottom:12}}>
+          <Lbl>Email</Lbl>
+          <Inp type="email" placeholder="votre@email.fr" value={email}
+            onChange={e=>setEmail(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&handleLogin()}
+            style={{background:"rgba(255,255,255,.04)"}}/>
+        </div>
+        <div style={{marginBottom:18}}>
+          <Lbl>Mot de passe</Lbl>
+          <Inp type="password" placeholder="••••••••" value={mdp}
+            onChange={e=>setMdp(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&handleLogin()}
+            style={{background:"rgba(255,255,255,.04)"}}/>
+        </div>
+        {err&&<div style={{fontSize:12,color:"#e05c5c",marginBottom:12,textAlign:"center"}}>{err}</div>}
+        <button style={{...S.btnPrim,width:"100%",padding:11,fontSize:13,borderRadius:7,
+          opacity:loading?.6:1}}
+          onClick={handleLogin} disabled={loading}>
+          {loading
+            ?<span style={{display:"inline-block",width:14,height:14,border:"2px solid #fff",
+                borderTopColor:"transparent",borderRadius:"50%",
+                animation:"spin .8s linear infinite",verticalAlign:"middle"}}/>
+            :"Se connecter →"}
+        </button>
+        <div style={{marginTop:20,fontSize:10.5,color:"#1e2e3e",textAlign:"center"}}>
+          © {new Date().getFullYear()} Yannick Otto — Lycée Victor Hugo, Carpentras
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FirebaseApp(){
+  const[fbUser,setFbUser]=useState(null);
+  const[loading,setLoading]=useState(true);
+
+  useEffect(()=>{
+    const unsub=firebase.auth().onAuthStateChanged(u=>{
+      setFbUser(u);
+      setLoading(false);
+    });
+    return unsub;
+  },[]);
+
+  if(loading)return(
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#06111f"}}>
+      <div style={{width:24,height:24,border:"3px solid rgba(212,33,61,.3)",
+        borderTopColor:"#D4213D",borderRadius:"50%",animation:"spin .8s linear infinite"}}/>
+    </div>
+  );
+
+  if(!fbUser)return <FirebaseLoginScreen onAuthenticated={()=>{}}/>;
+  return <App/>;
+}ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body>
 </html>
