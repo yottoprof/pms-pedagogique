@@ -434,7 +434,7 @@ function LoginScreen({onLogin,onModeEnseignant}){
                 Comptes de démonstration
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3}}>
-                {STAFF.map(s=>(
+               {STAFF.filter(s=>!s.hidden).map(s=>(
                   <div key={s.login} style={{fontSize:10.5,color:"#3a5a6a",cursor:"pointer",
                     padding:"3px 6px",borderRadius:3,background:"rgba(255,255,255,.02)"}}
                     onClick={()=>{setLogin(s.login);setMdp(s.mdp);}}>
