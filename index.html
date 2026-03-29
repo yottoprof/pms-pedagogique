@@ -488,10 +488,17 @@ function App(){
     setResas(p=>p.map(x=>x.id===id?{...x,statut:"en cours"}:x));
     notify(`✓ Check-in — Chambre ${r.chambreId} (${getCl(r.clientId)?.nom})`,"ok");
   };
-  const checkout=id=>{
+ const checkout=id=>{
+    const r=resas.find(x=>x.id===id);if(!r)return;
+    const cl=getCl(r.clientId);
+    const ch=getCh(r.chambreId);
+    setModal({type:"checkoutFacture",data:{resa:r,client:cl,chambre:ch}});
+  };
+const confirmCheckout=id=>{
     const r=resas.find(x=>x.id===id);if(!r)return;
     setChambres(p=>p.map(c=>c.id===r.chambreId?{...c,statut:"libre"}:c));
     setResas(p=>p.map(x=>x.id===id?{...x,statut:"terminée"}:x));
+    setModal(null);
     notify(`↩ Check-out — Chambre ${r.chambreId} libérée`,"ok");
   };
   const annuler=id=>{
