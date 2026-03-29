@@ -674,37 +674,26 @@ const confirmCheckout=id=>{
           {modal.type==="newResa"&&<NewResaModal clients={clients} chambres={chambres} resas={resas} onSave={addResa} onClose={()=>setModal(null)}/>}
           {modal.type==="newClient"&&<NewClientModal onSave={addClient} onClose={()=>setModal(null)}/>}
           {modal.type==="chambre"&&<FicheChambreModal chambre={modal.data} resas={resas} clients={clients} onUpdate={(cid,s)=>{updateStatutChambre(cid,s);setModal(null);}} onClose={()=>setModal(null)}/>}
-       {modal.type==="checkinProcedure"&&(
+      {modal.type==="fichePolice"&&(
+  <div style={{background:"#0b1c2e",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,padding:28,width:"min(520px,92vw)"}}>
+    <MTitre icon="📋" title="Fiche de police — Check-in" onClose={()=>setModal(null)}/>
+    <div style={{background:"rgba(212,33,61,.06)",border:"1px solid rgba(212,33,61,.2)",borderRadius:8,padding:"12px 16px",marginBottom:16,fontSize:12,color:"#e8a030"}}>
+      ⚠️ Document obligatoire — Article R.611-42 du Code de l'entrée et du séjour des étrangers
+    </div>
+    <FichePoliceForm
+      client={modal.data.client}
+      chambre={modal.data.chambre}
+      resa={modal.data.resa}
+      onValider={(fichePolice)=>{
+        confirmCheckin(modal.data.resa.id, fichePolice);
+      }}
+      onClose={()=>setModal(null)}
+    />
+  </div>
+)}
+{modal.type==="checkinProcedure"&&(
   <div style={{background:"#0b1c2e",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,padding:28,width:"min(480px,92vw)"}}>
     <MTitre icon="✓" title="Procédure de check-in" onClose={()=>setModal(null)}/>
-    <div style={{background:"rgba(61,190,122,.06)",border:"1px solid rgba(61,190,122,.2)",borderRadius:8,padding:"14px 18px",marginBottom:16}}>
-      <div style={{fontSize:13,fontWeight:600,color:"#3dbe7a",marginBottom:10}}>Client</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:12}}>
-        <div><span style={{color:"#4a5e72"}}>Nom :</span> <b style={{color:"#dde4ee"}}>{modal.data.client?.nom} {modal.data.client?.prenom}</b></div>
-        <div><span style={{color:"#4a5e72"}}>Fidélité :</span> <b style={{color:"#d4a830"}}>{modal.data.client?.fidelite}</b></div>
-        <div><span style={{color:"#4a5e72"}}>Ville :</span> <span style={{color:"#dde4ee"}}>{modal.data.client?.ville}</span></div>
-        <div><span style={{color:"#4a5e72"}}>Email :</span> <span style={{color:"#dde4ee"}}>{modal.data.client?.email}</span></div>
-      </div>
-    </div>
-    <div style={{background:"rgba(212,33,61,.06)",border:"1px solid rgba(212,33,61,.2)",borderRadius:8,padding:"14px 18px",marginBottom:16}}>
-      <div style={{fontSize:13,fontWeight:600,color:"#D4213D",marginBottom:10}}>Chambre attribuée</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:12}}>
-        <div><span style={{color:"#4a5e72"}}>Numéro :</span> <b style={{color:"#D4213D",fontSize:16}}>{modal.data.chambre?.id}</b></div>
-        <div><span style={{color:"#4a5e72"}}>Type :</span> <span style={{color:"#dde4ee"}}>{modal.data.chambre?.type}</span></div>
-        <div><span style={{color:"#4a5e72"}}>Literie :</span> <span style={{color:"#dde4ee"}}>{modal.data.chambre?.literie}</span></div>
-        <div><span style={{color:"#4a5e72"}}>Vue :</span> <span style={{color:"#dde4ee"}}>{modal.data.chambre?.vue}</span></div>
-      </div>
-    </div>
-    <div style={{background:"rgba(232,160,48,.06)",border:"1px solid rgba(232,160,48,.2)",borderRadius:8,padding:"14px 18px",marginBottom:20}}>
-      <div style={{fontSize:13,fontWeight:600,color:"#e8a030",marginBottom:10}}>✓ Checklist réception</div>
-      <div style={{display:"flex",flexDirection:"column",gap:6,fontSize:12,color:"#dde4ee"}}>
-        <div>☐ Vérifier la pièce d'identité du client</div>
-        <div>☐ Faire signer la fiche de police</div>
-        <div>☐ Remettre la clé de la chambre {modal.data.chambre?.id}</div>
-        <div>☐ Présenter les services de l'hôtel</div>
-        {modal.data.resa?.notes&&<div style={{color:"#e8a030"}}>⚠️ Note : {modal.data.resa.notes}</div>}
-      </div>
-    </div>
     <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
       <button style={S.btnGhost} onClick={()=>setModal(null)}>Annuler</button>
       <button style={{...S.btnPrim,background:"#3dbe7a",padding:"10px 24px"}} onClick={()=>confirmCheckin(modal.data.resa.id)}>✓ Check-in confirmé</button>
