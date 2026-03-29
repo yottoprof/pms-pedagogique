@@ -657,6 +657,101 @@ const confirmCheckout=id=>{
           <Stats resas={resas} chambres={chambres} clients={clients}
             getCh={getCh} getCl={getCl} user={user}/>
         )}
+      {tab==="cloture"&&canStats&&(
+  <div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:10}}>
+      <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>
+        ⊟ Clôture du jour
+        <span style={{fontSize:11,color:"#4a5e72",fontWeight:400,marginLeft:10}}>
+          {today.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
+        </span>
+      </h2>
+      <button style={S.btnPrim} onClick={()=>window.print()}>🖨️ Imprimer le rapport</button>
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginBottom:18}}>
+      {[
+        {v:chambres.filter(c=>c.statut==="occupée").length,l:"Chambres occupées",c:"#e05c5c"},
+        {v:chambres.filter(c=>c.statut==="libre").length,l:"Chambres libres",c:"#3dbe7a"},
+        {v:resas.filter(r=>r.arrivee===fmt(today)&&r.statut!=="annulée").length,l:"Arrivées du jour",c:"#e8a030"},
+        {v:resas.filter(r=>r.depart===fmt(today)&&r.statut!=="annulée").length,l:"Départs du jour",c:"#a07ad4"},
+        {v:`${Math.round(chambres.filter(c=>c.statut==="occupée"||c.statut==="réservée").length/chambres.length*100)}%`,l:"Taux d'occupation",c:"#D4213D"},
+        {v:fmtEuro(resas.filter(r=>r.statut==="terminée"&&r.depart===fmt(today)).reduce((s,r)=>{const ch=getCh(r.chambreId);return s+calcTotal(ch,r)*(1.1);},0)),l:"CA encaissé du jour",c:"#3dbe7a"},
+      ].map(k=>(
+        <div key={k.l} style={{background:"rgba(12,22,36,.9)",border:`1px solid ${k.c}18`,borderLeft:`3px solid ${k.c}`,borderRadius:6,padding:"14px 16px"}}>
+          <div style={{fontSize:22,fontWeight:700,color:"#dde4ee",lineHeight:1.2}}>{k.v}</div>
+          <div style={{fontSize:11,color:"#4a5e72",marginTop:2}}>{k.l}</div>
+        </div>
+      ))}
+    </div>
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+      <div style={S.card}>
+        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+          Arrivées traitées
+        </div>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+          <thead><tr>{["Client","Chambre","Statut"].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>
+          {resas.filter(r=>r.arrivee===fmt(today)&&r.statut!=="annulée").map(r=>{
+            const cl=getCl(r.clientId);
+            return(<tr key={r.id}>
+              <td style={S.td}><b>{cl?.nom}</b> {cl?.prenom}</td>
+              <td style={S.td}><b style={{color:"#D4213D"}}>{r.chambreId}</b></td>
+              <td style={S.td}>{badge(SR[r.statut],r.statut)}</td>
+            </tr>);
+          })}
+          {resas.filter(r=>r.arrivee===fmt(today)&&r.statut!=="annulée").length===0&&
+            <tr><td colSpan={3} style={{...S.td,color:"#2a3a4a",textAlign:"center"}}>Aucune arrivée</td></tr>}
+          </tbody>
+        </table>
+      </div>
+
+      <div style={S.card}>
+        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+          Départs traités
+        </div>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+          <thead><tr>{["Client","Chambre","Statut"].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+          <tbody>
+          {resas.filter(r=>r.depart===fmt(today)&&r.statut!=="annulée").map(r=>{
+            const cl=getCl(r.clientId);
+            return(<tr key={r.id}>
+              <td style={S.td}><b>{cl?.nom}</b> {cl?.prenom}</td>
+              <td style={S.td}><b style={{color:"#D4213D"}}>{r.chambreId}</b></td>
+              <td style={S.td}>{badge(SR[r.statut],r.statut)}</td>
+            </tr>);
+          })}
+          {resas.filter(r=>r.depart===fmt(today)&&r.statut!=="annulée").length===0&&
+            <tr><td colSpan={3} style={{...S.td,color:"#2a3a4a",textAlign:"center"}}>Aucun départ</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style={S.card}>
+      <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+        État des chambres
+      </div>
+      <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+        {chambres.map(c=>(
+          <div key={c.id} style={{width:70,background:`${SC[c.statut]}10`,
+            border:`1px solid ${SC[c.statut]}35`,borderTop:`2px solid ${SC[c.statut]}`,
+            borderRadius:4,padding:"8px 10px",textAlign:"center"}}>
+            <div style={{fontSize:14,fontWeight:700,color:"#dde4ee"}}>{c.id}</div>
+            <div style={{fontSize:9,color:SC[c.statut],marginTop:2,fontWeight:600}}>{c.statut}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div style={{marginTop:14,padding:"12px 16px",background:"rgba(255,255,255,.02)",
+      border:"1px solid rgba(255,255,255,.05)",borderRadius:6,
+      fontSize:10.5,color:"#2a3a4a",textAlign:"center"}}>
+      Rapport généré le {new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:"numeric"})} à {new Date().toLocaleTimeString("fr-FR")} · {CONFIG.hotel.nom} {CONFIG.hotel.ville} · {CONFIG.copyright.auteur}
+    </div>
+  </div>
+)}
         {tab==="parametrage"&&user.role==="directeur"&&(
           <Parametrage
             hotel={hotelConfig} couleur={couleur} staff={STAFF} chambresInit={chambres} clientsInit={clients}
