@@ -1495,7 +1495,7 @@ function FicheChambreModal({chambre,resas,clients,onUpdate,onClose}){
 /* ══════════════════════════════════════════════════════
    MODAL — FACTURE
 ══════════════════════════════════════════════════════ */
-function FactureModal({resa,chambre,client,hotel,onClose}){
+function FactureModal({resa,chambre,client,hotel,onClose,onCheckout=null}){
   if(!resa||!chambre||!client)return null;
   const H=hotel||HOTEL;
   const n=getNuits(resa.arrivee,resa.depart);
