@@ -1550,7 +1550,8 @@ function FactureModal({resa,chambre,client,hotel,onClose}){
       {resa.notes&&<div style={{fontSize:11,color:"#4a5e72",marginBottom:14,fontStyle:"italic"}}>Note : {resa.notes}</div>}
       <div style={{fontSize:10.5,color:"#2a3a4a",textAlign:"center",marginBottom:18}}>Merci pour votre séjour au {H.nom} {H.ville} · Paiement à la réception</div>
       <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-        <button style={S.btnGhost} onClick={onClose}>Fermer</button>
+      <button style={S.btnGhost} onClick={onClose}>Fermer</button>
+           {onCheckout&&<button style={{...S.btnPrim,background:"#3dbe7a",marginLeft:8}} onClick={onCheckout}>✓ Valider le paiement & Check-out</button>}
         <button style={S.btnPrim} onClick={()=>window.print()}>🖨️ Imprimer</button>
       </div>
     </div>
