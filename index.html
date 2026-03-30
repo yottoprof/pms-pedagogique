@@ -1566,7 +1566,25 @@ function NewResaModal({clients,chambres,resas,onSave,onClose}){
           {PENSIONS.map(p=><option key={p.code} value={p.code}>{p.label}{p.supp>0?` (+${p.supp}€/pers/j)`:""}</option>)}
         </Sel>
       </div>
-      <div style={{marginBottom:12}}><Lbl>Notes / Demandes spéciales</Lbl><Inp placeholder="Ex : chambre calme, anniversaire…" value={form.notes} onChange={e=>set("notes",e.target.value)}/></div>
+     <div style={{marginBottom:12}}><Lbl>Notes / Demandes spéciales</Lbl><Inp placeholder="Ex : chambre calme, anniversaire…" value={form.notes} onChange={e=>set("notes",e.target.value)}/></div>
+{ch&&ht>0&&<div style={{marginBottom:12}}>
+  <Lbl>Acompte à l'encaissement (%)</Lbl>
+  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+    {[0,20,30,50,100].map(p=>(
+      <button key={p} type="button"
+        style={{...S.btnGhost,fontSize:11,padding:"4px 10px",
+          background:form.acomptePercent===p?"rgba(212,33,61,.12)":"transparent",
+          color:form.acomptePercent===p?"#D4213D":"#4a5e72",
+          borderColor:form.acomptePercent===p?"rgba(212,33,61,.4)":"rgba(255,255,255,.08)"}}
+        onClick={()=>set("acomptePercent",p)}>
+        {p===0?"Sans acompte":`${p}%`}
+      </button>
+    ))}
+  </div>
+  {form.acomptePercent>0&&<div style={{fontSize:12,color:"#e8a030",marginTop:6}}>
+    Acompte : <b>{fmtEuro(ttc*form.acomptePercent/100)}</b> — Solde à l'arrivée : <b>{fmtEuro(ttc*(1-form.acomptePercent/100))}</b>
+  </div>}
+</div>}
       {ch&&ht>0&&(
         <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:6,padding:"10px 14px",marginBottom:14,fontSize:12}}>
           <Ligne l={`Hébergement ch. ${ch.id} × ${n}n`} v={`${ch.prix*n}€`}/>
