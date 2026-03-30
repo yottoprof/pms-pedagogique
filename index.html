@@ -1388,7 +1388,7 @@ function ClientsTab({clients,resas,onNew}){
       <div style={S.card}>
         <div style={{overflowX:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse",minWidth:560}}>
-            <thead><tr>{["ID","Nom / Prénom","Contact","Localisation","Fidélité","Séjours"].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
+            <thead><tr>{["ID","Nom / Prénom","Profil","Besoins exprimés","Fidélité","Séjours"].map(h=><th key={h} style={S.th}>{h}</th>)}</tr></thead>
             <tbody>
             {filtered.map(c=>(
               <tr key={c.id}>
