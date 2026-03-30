@@ -1399,8 +1399,8 @@ function ClientsTab({clients,resas,onNew}){
                     <b>{c.nom}</b> {c.prenom}
                   </span>
                 </td>
-                <td style={S.td}><div>{c.email}</div><div style={{fontSize:10.5,color:"#4a5e72"}}>{c.tel}</div></td>
-                <td style={S.td}>{c.ville} <span style={{color:"#4a5e72"}}>· {c.pays}</span></td>
+               <td style={S.td}><span style={{fontSize:11,background:"rgba(74,159,212,.1)",color:"#4a9fd4",border:"1px solid rgba(74,159,212,.2)",borderRadius:20,padding:"2px 8px"}}>{c.profil||"—"}</span></td>
+                <td style={S.td}><span style={{fontSize:11,color:"#e8c870",fontStyle:"italic"}}>« {c.besoins||"À compléter"} »</span></td>
                 <td style={S.td}>{badge(FC[c.fidelite]||"#888",c.fidelite,true)}</td>
                 <td style={S.td}>
                   <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",
