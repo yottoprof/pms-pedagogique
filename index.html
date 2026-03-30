@@ -1511,7 +1511,7 @@ function Stats({resas,chambres,clients,getCh,getCl,user}){
    MODAL — NOUVELLE RÉSERVATION
 ══════════════════════════════════════════════════════ */
 function NewResaModal({clients,chambres,resas,onSave,onClose}){
-  const[form,setForm]=useState({clientId:clients[0]?.id||"",chambreId:"",arrivee:fmt(today),depart:fmt(addDays(today,1)),adultes:2,enfants:0,pension:"SA",notes:"",acompte:0,acomptePercent:30});
+ const[form,setForm]=useState({clientId:clients[0]?.id||"",chambreId:"",arrivee:fmt(today),depart:fmt(addDays(today,1)),adultes:2,enfants:0,pension:"SA",notes:"",acompte:0,acomptePercent:null});
   const[disponibles,setDisponibles]=useState([]);const[searched,setSearched]=useState(false);
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
   const chercher=()=>{
@@ -1530,7 +1530,7 @@ function NewResaModal({clients,chambres,resas,onSave,onClose}){
   const pen=PENSIONS.find(p=>p.code===form.pension)||{supp:0};
   const ht=ch&&n>0?(ch.prix+pen.supp*form.adultes)*n:0;
   const ttc=ht*(1+HOTEL.tva);
-  const canSave=form.clientId&&form.chambreId&&n>0;
+  const canSave=form.clientId&&form.chambreId&&n>0&&form.acomptePercent!==null;
   return(
     <div style={{background:"#0b1c2e",border:"1px solid rgba(255,255,255,.1)",borderRadius:10,padding:26,width:"min(540px,92vw)"}}>
       <MTitre icon="◷" title="Nouvelle réservation" onClose={onClose}/>
