@@ -1508,7 +1508,7 @@ function Stats({resas,chambres,clients,getCh,getCl,user}){
    MODAL — NOUVELLE RÉSERVATION
 ══════════════════════════════════════════════════════ */
 function NewResaModal({clients,chambres,resas,onSave,onClose}){
-  const[form,setForm]=useState({clientId:clients[0]?.id||"",chambreId:"",arrivee:fmt(today),depart:fmt(addDays(today,1)),adultes:2,enfants:0,pension:"SA",notes:""});
+  const[form,setForm]=useState({clientId:clients[0]?.id||"",chambreId:"",arrivee:fmt(today),depart:fmt(addDays(today,1)),adultes:2,enfants:0,pension:"SA",notes:"",acompte:0,acomptePercent:30});
   const[disponibles,setDisponibles]=useState([]);const[searched,setSearched]=useState(false);
   const set=(k,v)=>setForm(p=>({...p,[k]:v}));
   const chercher=()=>{
