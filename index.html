@@ -527,7 +527,7 @@ function App(){
       setReclamations(p=>[newR,...p]);
       setNotif({msg:`📢 Nouvelle réclamation — ${r.type} (${r.urgence})`,type:"err"});
       setTimeout(()=>setNotif(null),5000);
-    },10*60*1000);
+ },30*1000);
     return()=>clearInterval(interval);
   },[]);
 
