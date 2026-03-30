@@ -1,11 +1,11 @@
-[README (2).md](https://github.com/user-attachments/files/26357876/README.2.md)
+[README (3).md](https://github.com/user-attachments/files/26359446/README.3.md)
 # 🏨 PMS Pédagogique — Logiciel de Réception Hôtelière
 
 > Outil de simulation d'un Property Management System (PMS) hôtelier, conçu pour les classes de Bac Pro MCV, Commerce et filières hôtelières-restauration.
 
 **Auteur :** Yannick Otto — Lycée Victor Hugo, Carpentras  
 **Licence :** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)  
-**Version :** v2.1
+**Version :** v2.2
 
 ---
 
@@ -20,8 +20,7 @@
 
 ## 🔐 Accès sécurisé (Firebase Authentication)
 
-L'accès au PMS est protégé par une authentification Firebase.  
-Les élèves doivent se connecter avec les identifiants fournis par l'enseignant.
+L'accès au PMS est protégé par une authentification Firebase.
 
 ### Compte élèves
 | Champ | Valeur |
@@ -39,8 +38,6 @@ Les élèves doivent se connecter avec les identifiants fournis par l'enseignant
 
 ## 👤 Postes disponibles dans le PMS
 
-Une fois connecté via Firebase, l'élève choisit son poste :
-
 | Login | Poste | Rôle | Shift | Accès |
 |---|---|---|---|---|
 | `reception1` | Réceptionniste A | Réceptionniste | Matin (6h–14h) | Opérations |
@@ -54,6 +51,25 @@ Une fois connecté via Firebase, l'élève choisit son poste :
 
 ---
 
+## 👥 Base clients pédagogique (25 clients)
+
+Les clients ont des **profils variés et des besoins exprimés** — l'élève doit analyser les besoins et attribuer la chambre adaptée. Les informations de contact (email, téléphone, ville, pays) sont volontairement vides pour être complétées par l'élève lors du check-in.
+
+| Profil | Exemples de besoins |
+|---|---|
+| Couple | Vue piscine, king size, anniversaire |
+| Famille avec enfants | Lits jumeaux, étage bas, grande capacité |
+| Voyageur d'affaires | Calme, Wi-Fi, facture société |
+| Client étranger | Non-fumeur, petit-déjeuner, barrière langue |
+| VIP Platine | Suite, surclassement, champagne, butler |
+| Senior | Étage bas, calme, long séjour |
+| PMR | Chambre accessible, douche italienne |
+| Couple romantique | Décoration chambre, demande en mariage |
+| Famille monoparentale | Budget limité, vue jardin |
+| Allergique | Literie hypoallergénique obligatoire |
+
+---
+
 ## ✨ Fonctionnalités
 
 ### 🏠 Tableau de bord
@@ -62,75 +78,70 @@ Une fois connecté via Firebase, l'élève choisit son poste :
 - Demandes spéciales signalées en orange
 
 ### 📋 Réservations
-- Création de réservation avec vérification des disponibilités
+- Création avec vérification des disponibilités
 - Calcul automatique HT / TVA / TTC
-- **Acompte obligatoire** à choisir avant confirmation (0%, 20%, 30%, 50%, 100%)
+- **Acompte obligatoire** (0%, 20%, 30%, 50%, 100%)
 - Affichage du solde restant dû sur la facture
-- Filtres par statut
 
 ### ✅ Check-in professionnel
-- **Badge fidélité** affiché (Bronze / Argent / Or / Platine) avec message personnalisé
+- **Badge fidélité** (Bronze / Argent / Or / Platine) avec message adapté
 - **Fiche de police numérique** obligatoire (Article R.611-42)
-- Vérification identité client
-- Attribution de la chambre
 - Signature électronique obligatoire
 
 ### 💶 Check-out avec facture
-- Facture détaillée générée automatiquement
-- Affichage de l'acompte versé et du solde restant
-- **Validation du paiement obligatoire** avant libération de la chambre
+- Facture détaillée avec acompte et solde restant
+- **Validation du paiement obligatoire** avant libération chambre
 - Impression possible
 
 ### 🛏 Gestion des chambres
-- Plan visuel par statut (libre, occupée, réservée, maintenance)
+- Plan visuel par statut
 - Fiche détaillée par chambre
-- Changement de statut
 
 ### 👥 Fichier clients
-- Base clients avec niveau de fidélité
-- Historique des séjours
+- 25 clients avec profils et besoins exprimés
+- Informations de contact à compléter par l'élève
+- Niveau de fidélité et historique des séjours
 
 ### 📅 Planning d'occupation
-- **Calendrier visuel sur 15 jours**
+- Calendrier visuel sur 15 jours
 - Initiales des clients dans les cases occupées
-- Colonne du jour mise en évidence
-- Légende des statuts
 
 ### 📢 Réclamations clients
-- Saisie par type (propreté, bruit, facturation, équipements...)
-- Niveau d'urgence (faible, moyenne, haute)
+- Saisie manuelle par type et niveau d'urgence
+- **Réclamations automatiques** toutes les 10 minutes (chambres occupées uniquement)
+- Notification rouge visible 15 secondes
 - Suivi statut (en cours / résolue)
-- Persistance pendant toute la session
 
 ### 📊 Statistiques *(Manager/Directeur)*
-- Revenus mensuels
-- Taux d'occupation sur 12 mois
-- Top clients par CA
-- Répartition par type de chambre
+- Revenus mensuels, taux d'occupation, top clients
 
 ### ⊟ Clôture du jour *(Manager/Directeur)*
 - Rapport journalier complet imprimable
-- Arrivées et départs traités
-- CA encaissé du jour
-- État des chambres
 
-### ⚙ Paramétrage *(Directeur/Professeur uniquement)*
-- Modification de l'identité de l'hôtel
-- Gestion du personnel
-- Configuration des chambres
-- Base clients de départ
+### ⚙ Paramétrage *(Directeur/Professeur)*
+- Identité de l'hôtel, personnel, chambres, clients
 
 ---
 
 ## 🎓 Usage pédagogique
 
+### Compétences travaillées
+- Analyser les besoins d'un client et attribuer la chambre adaptée
+- Réaliser un check-in professionnel avec fiche de police
+- Encaisser un acompte et calculer le solde restant
+- Générer et expliquer une facture HT/TVA/TTC
+- Gérer une réclamation client en temps réel
+- Consulter le planning d'occupation
+- Rédiger un rapport de clôture journalière
+
 ### Scénario type (1h de cours)
 1. Connexion Firebase + choix du poste
 2. Consultation du tableau de bord et du planning
-3. Traitement des arrivées (check-in + fiche de police)
-4. Traitement des départs (check-out + facture)
-5. Gestion d'une réclamation client
-6. Rapport de clôture *(manager)*
+3. Analyse des besoins client → attribution de chambre
+4. Traitement des arrivées (check-in + fiche de police)
+5. Traitement des départs (check-out + facture)
+6. Gestion des réclamations automatiques
+7. Rapport de clôture *(manager)*
 
 ---
 
@@ -147,7 +158,7 @@ Une fois connecté via Firebase, l'élève choisit son poste :
 ## ⚠️ Limitations
 
 - Les données sont réinitialisées à chaque rechargement de page
-- Ne pas rafraîchir le navigateur pendant une séance de travail
+- Ne pas rafraîchir le navigateur pendant une séance
 - Usage pédagogique exclusif — non affilié au groupe Accor
 
 ---
