@@ -2247,9 +2247,10 @@ function NouvelleReclamationModal({clients,types,urgences,onSave,onClose}){
         </button>
       </div>
     </div>
-  );
+ );
 }
-  return <div style={{fontSize:13,fontWeight:600,color:"#dde4ee",marginBottom:14,display:"flex",alignItems:"center",gap:6}}><span>{icon}</span>{title}</div>;
+function SectionTitle({icon,title}){
+  return <div style={{fontSize:13
 }
 function FG({label,children}){
   return <div style={{marginBottom:0}}><Lbl>{label}</Lbl>{children}</div>;
