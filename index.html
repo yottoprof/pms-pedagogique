@@ -2103,8 +2103,7 @@ function Parametrage({hotel,couleur,staff,chambresInit,clientsInit,onUpdateHotel
 /* ══════════════════════════════════════════════════════
    RÉCLAMATIONS
 ══════════════════════════════════════════════════════ */
-function Reclamations({resas,clients,getCl,getCh,user}){
-  const[reclamations,setReclamations]=useState([]);
+function Reclamations({resas,clients,getCl,getCh,user,reclamations,setReclamations}){
   const[modal,setModal]=useState(null);
 
   const TYPES=["Propreté chambre","Bruit / nuisances","Équipements défectueux","Facturation incorrecte","Accueil / service","Restauration","Autre"];
