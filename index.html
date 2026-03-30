@@ -497,6 +497,39 @@ function App(){
   const canAdmin=user&&user.role==="directeur";
 
   const notify=(msg,type="ok")=>{setNotif({msg,type});setTimeout(()=>setNotif(null),3400);};
+  useEffect(()=>{
+    const RECLAMATIONS_AUTO=[
+      {type:"Propreté chambre",urgence:"haute",description:"Le client signale que la salle de bain n'a pas été nettoyée correctement."},
+      {type:"Bruit / nuisances",urgence:"moyenne",description:"Plainte de bruit provenant de la chambre voisine depuis 30 minutes."},
+      {type:"Équipements défectueux",urgence:"moyenne",description:"La télévision ne fonctionne plus depuis ce matin."},
+      {type:"Restauration",urgence:"faible",description:"Room service commandé il y a 45 minutes, toujours pas arrivé."},
+      {type:"Facturation incorrecte",urgence:"haute",description:"Le client conteste un montant sur sa note — mini-bar non consommé facturé."},
+      {type:"Bruit / nuisances",urgence:"haute",description:"Plainte urgente : bruit excessif, autres clients se plaignent depuis 1 heure."},
+      {type:"Équipements défectueux",urgence:"faible",description:"La climatisation fait un bruit anormal depuis hier soir."},
+      {type:"Propreté chambre",urgence:"moyenne",description:"Des draps tachés retrouvés lors du service de couverture."},
+      {type:"Accueil / service",urgence:"faible",description:"Client mécontent de l'attente à la réception lors de son arrivée."},
+      {type:"Équipements défectueux",urgence:"moyenne",description:"Le coffre-fort est bloqué, le client ne peut plus l'ouvrir."},
+    ];
+    const interval=setInterval(()=>{
+      const resasEnCours=resas.filter(x=>x.statut==="en cours");
+      if(resasEnCours.length===0)return;
+      const resaAleatoire=resasEnCours[Math.floor(Math.random()*resasEnCours.length)];
+      const r=RECLAMATIONS_AUTO[Math.floor(Math.random()*RECLAMATIONS_AUTO.length)];
+      const newR={
+        ...r,
+        id:`AUTO${Date.now()}`,
+        clientId:resaAleatoire.clientId,
+        chambreId:resaAleatoire.chambreId,
+        date:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),
+        statut:"en cours",
+        auteur:"Système automatique"
+      };
+      setReclamations(p=>[newR,...p]);
+      setNotif({msg:`📢 Nouvelle réclamation — ${r.type} (${r.urgence})`,type:"err"});
+      setTimeout(()=>setNotif(null),5000);
+    },10*60*1000);
+    return()=>clearInterval(interval);
+  },[]);
 
   const getCh=id=>chambres.find(c=>c.id===id);
   const getCl=id=>clients.find(c=>c.id===id);
