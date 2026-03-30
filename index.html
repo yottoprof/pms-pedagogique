@@ -662,7 +662,10 @@ const confirmCheckout=id=>{
           <Stats resas={resas} chambres={chambres} clients={clients}
             getCh={getCh} getCl={getCl} user={user}/>
         )}
-     {tab==="planning"&&(
+    {tab==="reclamations"&&(
+  <Reclamations resas={resas} clients={clients} getCl={getCl} getCh={getCh} user={user}/>
+)}
+        {tab==="planning"&&(
   <div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:10}}>
       <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>📅 Planning d'occupation
