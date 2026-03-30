@@ -661,7 +661,90 @@ const confirmCheckout=id=>{
           <Stats resas={resas} chambres={chambres} clients={clients}
             getCh={getCh} getCl={getCl} user={user}/>
         )}
-      {tab==="cloture"&&canStats&&(
+     {tab==="planning"&&(
+  <div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:10}}>
+      <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>📅 Planning d'occupation
+        <span style={{fontSize:11,color:"#4a5e72",fontWeight:400,marginLeft:10}}>— 15 jours</span>
+      </h2>
+      <div style={{display:"flex",gap:10,fontSize:11,flexWrap:"wrap"}}>
+        {Object.entries(SC).map(([s,c])=>(
+          <span key={s} style={{display:"flex",alignItems:"center",gap:4,color:"#4a5e72"}}>
+            <span style={{width:10,height:10,background:c,borderRadius:2,display:"inline-block"}}/>
+            {s}
+          </span>
+        ))}
+      </div>
+    </div>
+
+    <div style={{...S.card,overflowX:"auto"}}>
+      <table style={{borderCollapse:"collapse",minWidth:700,width:"100%"}}>
+        <thead>
+          <tr>
+            <th style={{...S.th,minWidth:90,position:"sticky",left:0,background:"rgba(255,255,255,.04)",zIndex:1}}>Chambre</th>
+            {Array.from({length:15},(_,i)=>{
+              const d=addDays(today,i);
+              const isToday=fmt(d)===fmt(today);
+              return(
+                <th key={i} style={{...S.th,minWidth:38,textAlign:"center",
+                  background:isToday?"rgba(212,33,61,.15)":"rgba(255,255,255,.04)",
+                  color:isToday?"#D4213D":"#8a9fbb",
+                  borderBottom:isToday?"2px solid #D4213D":"1px solid rgba(255,255,255,.07)"}}>
+                  <div>{d.toLocaleDateString("fr-FR",{weekday:"narrow"})}</div>
+                  <div style={{fontSize:11,fontWeight:700}}>{d.getDate()}</div>
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+        {chambres.map(ch=>(
+          <tr key={ch.id}>
+            <td style={{...S.td,position:"sticky",left:0,background:"rgba(8,15,26,.95)",zIndex:1,minWidth:90}}>
+              <div style={{fontWeight:600,color:"#dde4ee",fontSize:12}}>{ch.id}</div>
+              <div style={{fontSize:10,color:"#D4213D"}}>{ch.type.split(" ")[0]}</div>
+              <div style={{fontSize:10,color:"#4a5e72"}}>{ch.prix}€</div>
+            </td>
+            {Array.from({length:15},(_,i)=>{
+              const d=fmt(addDays(today,i));
+              const resa=resas.find(r=>
+                r.chambreId===ch.id&&
+                r.statut!=="annulée"&&
+                d>=r.arrivee&&d<r.depart
+              );
+              const statut=resa
+                ?(resa.statut==="en cours"?"occupée":"réservée")
+                :ch.statut==="maintenance"?"maintenance":"libre";
+              const cl=resa?getCl(resa.clientId):null;
+              const isToday=d===fmt(today);
+              return(
+                <td key={i} style={{...S.td,padding:"4px 3px",textAlign:"center",
+                  background:isToday?"rgba(212,33,61,.05)":"transparent"}}>
+                  <div title={cl?`${cl.nom} ${cl.prenom} — ${resa?.arrivee} → ${resa?.depart}`:""}
+                    style={{
+                      width:32,height:32,borderRadius:4,margin:"0 auto",
+                      background:`${SC[statut]}18`,
+                      border:`1px solid ${SC[statut]}40`,
+                      display:"flex",alignItems:"center",justifyContent:"center",
+                      fontSize:9,color:SC[statut],fontWeight:600,cursor:resa?"pointer":"default",
+                      title:cl?cl.nom:""
+                    }}>
+                    {resa?cl?.nom?.slice(0,3).toUpperCase():""}
+                  </div>
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div style={{marginTop:10,fontSize:11,color:"#3a5060"}}>
+      💡 Survolez une case pour voir les détails de la réservation. Les initiales du client apparaissent dans les cases occupées.
+    </div>
+  </div>
+)}
   <div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:10}}>
       <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>
