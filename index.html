@@ -664,7 +664,7 @@ const confirmCheckout=id=>{
             getCh={getCh} getCl={getCl} user={user}/>
         )}
     {tab==="reclamations"&&(
-  <Reclamations resas={resas} clients={clients} getCl={getCl} getCh={getCh} user={user}/>
+ <Reclamations resas={resas} clients={clients} getCl={getCl} getCh={getCh} user={user} reclamations={reclamations} setReclamations={setReclamations}/>
 )}
         {tab==="planning"&&(
   <div>
