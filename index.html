@@ -2196,10 +2196,11 @@ function Reclamations({resas,clients,getCl,getCh,user,reclamations,setReclamatio
 
   const[modalRec,setModalRec]=useState(null);
   const resoudre=id=>setModalRec(id);
-  const confirmerResolution=(id,traitement,reponse)=>{
+ const confirmerResolution=(id,traitement,reponse)=>{
     const heureResolution=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
     setReclamations(p=>p.map(r=>r.id===id?{...r,statut:"résolue",traitement,reponse,heureResolution}:r));
     setModalRec(null);
+    if(examActif)setScoreExamen(p=>({...p,reclamation:true}));
   };
 
   const clientsEnSejour=resas.filter(r=>r.statut==="en cours");
