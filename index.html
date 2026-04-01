@@ -2407,9 +2407,8 @@ const maxScore=Object.keys(score).length;
     return()=>clearInterval(intervalRef.current);
   },[examActif]);
 
-  const terminerExamen=()=>{
-    clearInterval(intervalRef.current);
-    setExamActif(false);
+ const terminerExamenLocal=()=>{
+    terminerExamen();
     setPhase("rapport");
   };
 
