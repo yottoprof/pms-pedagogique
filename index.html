@@ -2346,7 +2346,7 @@ const SCENARIOS_EXAMEN=[
   {id:3,titre:"Weekend romantique couple Lopez",client:{nom:"LOPEZ",prenom:"Carmen",email:"",tel:"",ville:"",pays:"France",fidelite:"Bronze",sejours:1},besoins:"Couple, vue piscine, king size, demande spéciale : décoration chambre pour demande en mariage",pension:"PDJ",reclamation:{type:"Propreté chambre",urgence:"moyenne",description:"La chambre n'a pas été préparée comme convenu pour l'occasion spéciale."},chambresRecommandees:["201","304","305"],duree:20},
 ];
 
-function ModeExamen({resas,chambres,clients,getCl,getCh,user,onCheckin,onCheckout,onAddResa,onAddClient,reclamations,setReclamations,examActif,setExamActif,scoreExamen,setScoreExamen,scenario,setScenario,tempsRestant,setTempsRestant,intervalRef,terminerExamen}){
+function ModeExamen({resas,chambres,clients,getCl,getCh,user,onCheckin,onCheckout,onAddResa,onAddClient,reclamations,setReclamations,examActif,setExamActif,scoreExamen,setScoreExamen,scenario,setScenario,tempsRestant,setTempsRestant,intervalRef,terminerExamen,notify}){
   const[phase,setPhase]=useState(examActif?"examen":"accueil");
   const[resaExamen,setResaExamen]=useState(null);
   const score=scoreExamen;
