@@ -2225,6 +2225,16 @@ function Reclamations({resas,clients,getCl,getCh,user,reclamations,setReclamatio
         </div>
       )}
 
+    {modalRec&&recEnCours&&(
+        <ModalOverlay onClose={()=>setModalRec(null)}>
+          <TraitementReclamationModal
+            reclamation={recEnCours}
+            client={getCl(recEnCours.clientId)}
+            onConfirmer={(traitement,reponse)=>confirmerResolution(modalRec,traitement,reponse)}
+            onClose={()=>setModalRec(null)}
+          />
+        </ModalOverlay>
+      )}
       {modal==="new"&&(
         <ModalOverlay onClose={()=>setModal(null)}>
           <NouvelleReclamationModal
