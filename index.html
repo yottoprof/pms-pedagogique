@@ -732,12 +732,14 @@ const addResa=data=>{
             getCh={getCh} getCl={getCl} user={user}/>
         )}
    {tab==="examen"&&(
-  <ModeExamen
+<ModeExamen
     resas={resas} chambres={chambres} clients={clients}
     getCl={getCl} getCh={getCh} user={user}
     onCheckin={checkin} onCheckout={checkout}
     onAddResa={addResa} onAddClient={addClient}
     reclamations={reclamations} setReclamations={setReclamations}
+    examActif={examActif} setExamActif={setExamActif}
+    scoreExamen={scoreExamen} setScoreExamen={setScoreExamen}
   />
 )}
         {tab==="reclamations"&&(
