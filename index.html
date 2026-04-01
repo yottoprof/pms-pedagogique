@@ -2583,7 +2583,8 @@ const maxScore=Object.keys(score).length;
         <button style={S.btnPrim} onClick={()=>window.print()}>🖨️ Imprimer le rapport</button>
       </div>
     </div>
-  );
+);
+  return null;
 }
 function TraitementReclamationModal({reclamation,client,onConfirmer,onClose}){
  const[traitement,setTraitement]=useState("");
