@@ -2370,14 +2370,11 @@ const SCENARIOS_EXAMEN=[
 ];
 
 function ModeExamen({resas,chambres,clients,getCl,getCh,user,onCheckin,onCheckout,onAddResa,onAddClient,reclamations,setReclamations,examActif,setExamActif,scoreExamen,setScoreExamen,scenario,setScenario,tempsRestant,setTempsRestant,intervalRef,terminerExamen}){
-  const[phase,setPhase]=useState("accueil");
-  const[scenario,setScenario]=useState(null);
-  const[tempsRestant,setTempsRestant]=useState(0);
-  const[examActif,setExamActif]=useState(false);
-  const[score,setScore]=useState({reservation:false,checkin:false,reclamation:false,checkout:false,acompte:false});
-  const[resaExamen,setResaExamen]=useState(null);
-  const[rapport,setRapport]=useState(null);
-  const intervalRef=useRef(null);
+const[phase,setPhase]=useState(examActif?"examen":"accueil");
+const[resaExamen,setResaExamen]=useState(null);
+const score=scoreExamen;
+const totalScore=Object.values(score).filter(Boolean).length;
+const maxScore=Object.keys(score).length;
 
   const demarrerExamen=(sc)=>{
     setScenario(sc);
