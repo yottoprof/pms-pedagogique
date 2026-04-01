@@ -723,7 +723,16 @@ const confirmCheckout=id=>{
           <Stats resas={resas} chambres={chambres} clients={clients}
             getCh={getCh} getCl={getCl} user={user}/>
         )}
-    {tab==="reclamations"&&(
+   {tab==="examen"&&(
+  <ModeExamen
+    resas={resas} chambres={chambres} clients={clients}
+    getCl={getCl} getCh={getCh} user={user}
+    onCheckin={checkin} onCheckout={checkout}
+    onAddResa={addResa} onAddClient={addClient}
+    reclamations={reclamations} setReclamations={setReclamations}
+  />
+)}
+        {tab==="reclamations"&&(
  <Reclamations resas={resas} clients={clients} getCl={getCl} getCh={getCh} user={user} reclamations={reclamations} setReclamations={setReclamations}/>
 )}
         {tab==="planning"&&(
