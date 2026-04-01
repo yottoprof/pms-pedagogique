@@ -2213,9 +2213,14 @@ function Reclamations({resas,clients,getCl,getCh,user,reclamations,setReclamatio
                 <td style={S.td}><span style={{fontSize:11}}>{r.auteur}</span></td>
                 <td style={S.td}>{badge(r.statut==="résolue"?"#3dbe7a":"#e8a030",r.statut)}</td>
                 <td style={S.td}>
-                  {r.statut==="en cours"&&(
+                 {r.statut==="en cours"&&(
                     <button style={{...S.btnGhost,fontSize:11,color:"#3dbe7a",borderColor:"rgba(61,190,122,.3)"}}
-                      onClick={()=>resoudre(r.id)}>✓ Résolue</button>
+                      onClick={()=>resoudre(r.id)}>✓ Traiter</button>
+                  )}
+                  {r.statut==="résolue"&&r.reponse&&(
+                    <div style={{fontSize:10,color:"#3dbe7a",maxWidth:180,fontStyle:"italic"}}>
+                      ✓ {r.traitement?.split(" ").slice(0,4).join(" ")}...
+                    </div>
                   )}
                 </td>
               </tr>);
