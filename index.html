@@ -2376,14 +2376,20 @@ const score=scoreExamen;
 const totalScore=Object.values(score).filter(Boolean).length;
 const maxScore=Object.keys(score).length;
 
-  const demarrerExamen=(sc)=>{
+ const demarrerExamen=(sc)=>{
     setScenario(sc);
     setTempsRestant(sc.duree*60);
-    setScore({reservation:false,checkin:false,reclamation:false,checkout:false,acompte:false});
+    setScoreExamen({reservation:false,checkin:false,reclamation:false,checkout:false,acompte:false});
     setResaExamen(null);
-    setRapport(null);
     setPhase("examen");
     setExamActif(true);
+    clearInterval(intervalRef.current);
+    intervalRef.current=setInterval(()=>{
+      setTempsRestant(t=>{
+        if(t<=1){clearInterval(intervalRef.current);setExamActif(false);setPhase("rapport");return 0;}
+        return t-1;
+      });
+    },1000);
   };
 
   useEffect(()=>{
