@@ -2538,8 +2538,9 @@ const maxScore=Object.keys(score).length;
       <div style={{textAlign:"center",marginBottom:24}}>
         <div style={{fontSize:48,marginBottom:8}}>{totalScore>=4?"🏆":totalScore>=3?"🥈":"🥉"}</div>
         <h2 style={{fontSize:20,color:"#dde4ee",fontWeight:600,marginBottom:4}}>
-          Résultat de l'examen
-       {scenario.titre}</div>
+        Résultat de l'examen
+        </h2>
+        <div style={{fontSize:14,color:"#4a5e72"}}>{scenario.titre}</div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:20}}>
         {[
