@@ -551,6 +551,7 @@ function App(){
 setModal({type:"fichePolice",data:{resa:r,client:cl,chambre:ch}});
   };
 const confirmCheckin=(id,fichePolice)=>{
+    if(examActif)setScoreExamen(p=>({...p,checkin:true}));
     const r=resas.find(x=>x.id===id);if(!r)return;
     setChambres(p=>p.map(c=>c.id===r.chambreId?{...c,statut:"occupée"}:c));
     setResas(p=>p.map(x=>x.id===id?{...x,statut:"en cours"}:x));
