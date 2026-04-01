@@ -640,6 +640,50 @@ const addResa=data=>{
     <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"#07121f",
       backgroundImage:"radial-gradient(ellipse at 0% 0%,rgba(212,33,61,.05) 0%,transparent 40%)"}}>
 
+    {/* BARRE EXAMEN FLOTTANTE */}
+{examActif&&scenario&&(
+  <div style={{position:"fixed",top:0,left:0,right:0,zIndex:9998,
+    background:urgent?"rgba(180,20,20,.97)":"rgba(0,30,60,.97)",
+    borderBottom:`2px solid ${urgent?"#e05c5c":"#D4213D"}`,
+    padding:"8px 24px",display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+    <div style={{fontSize:11,fontWeight:600,color:"#aaccee",textTransform:"uppercase",letterSpacing:1}}>
+      🎓 EXAMEN EN COURS
+    </div>
+    <div style={{fontSize:11,color:"#7aaccc"}}>{scenario.titre}</div>
+    <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+      {/* Tâches */}
+      <div style={{display:"flex",gap:6}}>
+        {[
+          {k:"reservation",label:"Résa"},
+          {k:"acompte",label:"Acompte"},
+          {k:"checkin",label:"CI"},
+          {k:"reclamation",label:"Récla."},
+          {k:"checkout",label:"CO"},
+        ].map(t=>(
+          <div key={t.k} style={{fontSize:10,padding:"2px 8px",borderRadius:20,fontWeight:600,
+            background:scoreExamen[t.k]?"rgba(61,190,122,.2)":"rgba(255,255,255,.08)",
+            color:scoreExamen[t.k]?"#3dbe7a":"#4a5e72",
+            border:`1px solid ${scoreExamen[t.k]?"rgba(61,190,122,.4)":"rgba(255,255,255,.1)"}`}}>
+            {scoreExamen[t.k]?"✓":""} {t.label}
+          </div>
+        ))}
+      </div>
+      {/* Score */}
+      <div style={{fontSize:13,fontWeight:700,color:"#dde4ee"}}>
+        {Object.values(scoreExamen).filter(Boolean).length}/{Object.keys(scoreExamen).length} pts
+      </div>
+      {/* Chrono */}
+      <div style={{fontSize:20,fontWeight:700,color:urgent?"#e05c5c":"#3dbe7a",
+        fontVariantNumeric:"tabular-nums",letterSpacing:2}}>
+        {String(Math.floor(tempsRestant/60)).padStart(2,"0")}:{String(tempsRestant%60).padStart(2,"0")}
+      </div>
+      <button style={{...S.btnGhost,fontSize:11,color:"#e05c5c",borderColor:"rgba(224,92,92,.3)"}}
+        onClick={terminerExamen}>
+        ✓ Terminer
+      </button>
+    </div>
+  </div>
+)}
       {/* NOTIFICATION */}
       {notif&&(
         <div style={{position:"fixed",top:14,right:16,zIndex:9999,
