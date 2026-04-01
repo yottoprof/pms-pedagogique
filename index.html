@@ -572,6 +572,7 @@ const confirmCheckout=id=>{
     setResas(p=>p.map(x=>x.id===id?{...x,statut:"terminée"}:x));
     setModal({type:"confirmationCheckout",data:{chambreId,client:cl}});
     notify(`↩ Check-out — Chambre ${chambreId} libérée`,"ok");
+    if(examActif)setScoreExamen(p=>({...p,checkout:true}));
   };
   const annuler=id=>{
     const r=resas.find(x=>x.id===id);
