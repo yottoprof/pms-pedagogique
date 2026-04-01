@@ -497,7 +497,9 @@ function App(){
   const[resas,setResas]=useState(RESERVATIONS_INIT);
   const[modal,setModal]=useState(null);
   const[notif,setNotif]=useState(null);
-  const[reclamations,setReclamations]=useState([]);
+ const[reclamations,setReclamations]=useState([]);
+  const[examActif,setExamActif]=useState(false);
+  const[scoreExamen,setScoreExamen]=useState({reservation:false,acompte:false,checkin:false,reclamation:false,checkout:false});
   const[hotelConfig,setHotelConfig]=useState({...CONFIG.hotel});
   const[couleur,setCouleur]=useState(CONFIG.couleur);
 
