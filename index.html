@@ -2495,8 +2495,44 @@ function ModeExamen({resas,chambres,clients,getCl,getCh,user,onCheckin,onCheckou
           {v:`${Math.floor((scenario.duree*60-tempsRestant)/60)}min`,l:"Temps utilisé",c:"#a07ad4"},
         ].map(k=>(
           <div key={k.l} style={{background:"rgba(12,22,36,.9)",border:`1px solid ${k.c}18`,
-            borderLeft:`3px solid ${k.c}`,borderRadius:6,padding:"14px 16px
-  function TraitementReclamationModal({reclamation,client,onConfirmer,onClose}){
+           borderLeft:`3px solid ${k.c}`,borderRadius:6,padding:"14px 16px",textAlign:"center"}}>
+            <div style={{fontSize:24,fontWeight:700,color:k.c}}>{k.v}</div>
+            <div style={{fontSize:11,color:"#4a5e72",marginTop:4}}>{k.l}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={S.card}>
+        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
+          Détail des compétences
+        </div>
+        {[
+          {k:"reservation",label:"Création de réservation"},
+          {k:"acompte",label:"Encaissement d'un acompte"},
+          {k:"checkin",label:"Check-in avec fiche de police"},
+          {k:"reclamation",label:"Gestion de réclamation"},
+          {k:"checkout",label:"Check-out avec facture"},
+        ].map(t=>(
+          <div key={t.k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+            padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
+            <span style={{fontSize:12,color:"#dde4ee"}}>{t.label}</span>
+            <span style={{fontSize:12,fontWeight:600,color:score[t.k]?"#3dbe7a":"#e05c5c"}}>
+              {score[t.k]?"✓ Validé":"✗ Non réalisé"}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:16}}>
+        <button style={S.btnGhost} onClick={()=>setPhase("accueil")}>← Retour</button>
+        <button style={S.btnPrim} onClick={()=>window.print()}>🖨️ Imprimer le rapport</button>
+      </div>
+    </div>
+  );
+
+  return null;
+}
+function TraitementReclamationModal
   const[traitement,setTraitement]=useState("");
   const[reponse,setReponse]=useState("");
   const TRAITEMENTS=[
