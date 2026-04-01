@@ -2337,46 +2337,19 @@ function Reclamations({resas,clients,getCl,getCh,user,reclamations,setReclamatio
    MODE EXAMEN
 ══════════════════════════════════════════════════════ */
 const SCENARIOS_EXAMEN=[
-  {
-    id:1,
-    titre:"Arrivée famille Moreau",
-    client:{nom:"MOREAU",prenom:"Famille",email:"",tel:"",ville:"",pays:"France",fidelite:"Argent",sejours:3},
-    besoins:"2 adultes + 2 enfants (6 et 9 ans), lits jumeaux, étage bas, vue jardin, petit-déjeuner inclus",
-    pension:"PDJ",
-    reclamation:{type:"Équipements défectueux",urgence:"moyenne",description:"La télévision de la chambre ne fonctionne pas depuis leur arrivée."},
-    chambresRecommandees:["107","108","104"],
-    duree:20,
-  },
-  {
-    id:2,
-    titre:"Séjour affaires M. Lambert",
-    client:{nom:"LAMBERT",prenom:"Antoine",email:"",tel:"",ville:"",pays:"France",fidelite:"Or",sejours:7},
-    besoins:"Seul, chambre calme, Wi-Fi fibre, facture société LAMBERT & ASSOCIES, check-in tardif",
-    pension:"SA",
-    reclamation:{type:"Bruit / nuisances",urgence:"haute",description:"Le client se plaint de bruit dans le couloir depuis 30 minutes, réunion tôt le lendemain."},
-    chambresRecommandees:["202","203","103"],
-    duree:20,
-  },
-  {
-    id:3,
-    titre:"Weekend romantique couple Lopez",
-    client:{nom:"LOPEZ",prenom:"Carmen",email:"",tel:"",ville:"",pays:"France",fidelite:"Bronze",sejours:1},
-    besoins:"Couple, vue piscine, king size, demande spéciale : décoration chambre pour demande en mariage",
-    pension:"PDJ",
-    reclamation:{type:"Propreté chambre",urgence:"moyenne",description:"Le client signale que la chambre n'a pas été préparée comme convenu pour l'occasion spéciale."},
-    chambresRecommandees:["201","304","305"],
-    duree:20,
-  },
+  {id:1,titre:"Arrivée famille Moreau",client:{nom:"MOREAU",prenom:"Famille",email:"",tel:"",ville:"",pays:"France",fidelite:"Argent",sejours:3},besoins:"2 adultes + 2 enfants (6 et 9 ans), lits jumeaux, étage bas, vue jardin, petit-déjeuner inclus",pension:"PDJ",reclamation:{type:"Équipements défectueux",urgence:"moyenne",description:"La télévision de la chambre ne fonctionne pas depuis leur arrivée."},chambresRecommandees:["107","108","104"],duree:20},
+  {id:2,titre:"Séjour affaires M. Lambert",client:{nom:"LAMBERT",prenom:"Antoine",email:"",tel:"",ville:"",pays:"France",fidelite:"Or",sejours:7},besoins:"Seul, chambre calme, Wi-Fi fibre, facture société LAMBERT & ASSOCIES, check-in tardif",pension:"SA",reclamation:{type:"Bruit / nuisances",urgence:"haute",description:"Le client se plaint de bruit dans le couloir depuis 30 minutes."},chambresRecommandees:["202","203","103"],duree:20},
+  {id:3,titre:"Weekend romantique couple Lopez",client:{nom:"LOPEZ",prenom:"Carmen",email:"",tel:"",ville:"",pays:"France",fidelite:"Bronze",sejours:1},besoins:"Couple, vue piscine, king size, demande spéciale : décoration chambre pour demande en mariage",pension:"PDJ",reclamation:{type:"Propreté chambre",urgence:"moyenne",description:"La chambre n'a pas été préparée comme convenu pour l'occasion spéciale."},chambresRecommandees:["201","304","305"],duree:20},
 ];
 
 function ModeExamen({resas,chambres,clients,getCl,getCh,user,onCheckin,onCheckout,onAddResa,onAddClient,reclamations,setReclamations,examActif,setExamActif,scoreExamen,setScoreExamen,scenario,setScenario,tempsRestant,setTempsRestant,intervalRef,terminerExamen}){
-const[phase,setPhase]=useState(examActif?"examen":"accueil");
-const[resaExamen,setResaExamen]=useState(null);
-const score=scoreExamen;
-const totalScore=Object.values(score).filter(Boolean).length;
-const maxScore=Object.keys(score).length;
+  const[phase,setPhase]=useState(examActif?"examen":"accueil");
+  const[resaExamen,setResaExamen]=useState(null);
+  const score=scoreExamen;
+  const totalScore=Object.values(score).filter(Boolean).length;
+  const maxScore=Object.keys(score).length;
 
- const demarrerExamen=(sc)=>{
+  const demarrerExamen=(sc)=>{
     setScenario(sc);
     setTempsRestant(sc.duree*60);
     setScoreExamen({reservation:false,checkin:false,reclamation:false,checkout:false,acompte:false});
@@ -2389,22 +2362,21 @@ const maxScore=Object.keys(score).length;
         if(t<=1){clearInterval(intervalRef.current);setExamActif(false);setPhase("rapport");return 0;}
         return t-1;
       });
-},1000);
+    },1000);
   };
 
- const terminerExamenLocal=()=>{
+  const terminerExamenLocal=()=>{
     terminerExamen();
     setPhase("rapport");
   };
 
- 
- if(phase==="accueil") return(
+  if(phase==="accueil") return(
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
         <h2 style={{fontSize:16,color:"#dde4ee",fontWeight:600}}>🎓 Mode Examen</h2>
       </div>
       <div style={{background:"rgba(212,33,61,.06)",border:"1px solid rgba(212,33,61,.2)",borderRadius:8,padding:"14px 18px",marginBottom:20,fontSize:12,color:"#e8a030"}}>
-        ⏱️ Durée : 20 minutes — 5 tâches à réaliser dans l'ordre — Score sur 5 points
+        Durée : 20 minutes — 5 tâches à réaliser — Score sur 5 points
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:14}}>
         {SCENARIOS_EXAMEN.map(sc=>(
@@ -2413,13 +2385,8 @@ const maxScore=Object.keys(score).length;
             <div style={{fontSize:13,color:"#D4213D",fontWeight:500,marginBottom:10}}>{sc.titre}</div>
             <div style={{fontSize:11,color:"#4a5e72",marginBottom:4}}>Client : <b style={{color:"#dde4ee"}}>{sc.client.nom} {sc.client.prenom}</b></div>
             <div style={{fontSize:11,color:"#e8c870",fontStyle:"italic",marginBottom:14}}>« {sc.besoins} »</div>
-            <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>
-              {["Réservation","Check-in","Réclamation","Check-out"].map(t=>(
-                <span key={t} style={{fontSize:10,background:"rgba(74,159,212,.1)",color:"#4a9fd4",border:"1px solid rgba(74,159,212,.2)",borderRadius:20,padding:"2px 8px"}}>{t}</span>
-              ))}
-            </div>
             <button style={{...S.btnPrim,width:"100%"}} onClick={()=>demarrerExamen(sc)}>
-              ▶ Démarrer ce scénario
+              Démarrer ce scénario
             </button>
           </div>
         ))}
@@ -2429,47 +2396,28 @@ const maxScore=Object.keys(score).length;
 
   if(phase==="examen") return(
     <div>
-      {/* Chronomètre */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20,
-        background:urgent?"rgba(212,33,61,.15)":"rgba(12,22,36,.9)",
-        border:`1px solid ${urgent?"rgba(212,33,61,.4)":"rgba(255,255,255,.08)"}`,
-        borderRadius:8,padding:"14px 20px"}}>
+        background:"rgba(12,22,36,.9)",border:"1px solid rgba(255,255,255,.08)",borderRadius:8,padding:"14px 20px"}}>
         <div>
           <div style={{fontSize:11,color:"#4a5e72",marginBottom:2}}>SCÉNARIO EN COURS</div>
           <div style={{fontSize:14,fontWeight:600,color:"#dde4ee"}}>{scenario.titre}</div>
         </div>
         <div style={{textAlign:"center"}}>
-          <div style={{fontSize:36,fontWeight:700,color:urgent?"#e05c5c":"#3dbe7a",fontVariantNumeric:"tabular-nums",lineHeight:1}}>
-            {min}:{sec}
+          <div style={{fontSize:36,fontWeight:700,color:"#3dbe7a",fontVariantNumeric:"tabular-nums",lineHeight:1}}>
+            {String(Math.floor(tempsRestant/60)).padStart(2,"0")}:{String(tempsRestant%60).padStart(2,"0")}
           </div>
-          <div style={{fontSize:10,color:"#4a5e72"}}>{urgent?"⚠️ TEMPS LIMITÉ":"Temps restant"}</div>
         </div>
         <div style={{textAlign:"right"}}>
           <div style={{fontSize:24,fontWeight:700,color:"#dde4ee"}}>{totalScore}/{maxScore}</div>
           <div style={{fontSize:10,color:"#4a5e72"}}>Points</div>
         </div>
       </div>
-
-      {/* Mission */}
       <div style={{...S.card,marginBottom:14}}>
-        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
-          📋 Votre mission
-        </div>
-        <div style={{fontSize:12,color:"#e8c870",fontStyle:"italic",marginBottom:12}}>
-          « {scenario.besoins} »
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,fontSize:11}}>
-          <div style={{color:"#4a5e72"}}>Client : <b style={{color:"#dde4ee"}}>{scenario.client.nom} {scenario.client.prenom}</b></div>
-          <div style={{color:"#4a5e72"}}>Fidélité : <b style={{color:"#d4a830"}}>{scenario.client.fidelite}</b></div>
-          <div style={{color:"#4a5e72"}}>Pension : <b style={{color:"#dde4ee"}}>{scenario.pension}</b></div>
-        </div>
+        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Mission</div>
+        <div style={{fontSize:12,color:"#e8c870",fontStyle:"italic",marginBottom:12}}>« {scenario.besoins} »</div>
       </div>
-
-      {/* Tâches */}
       <div style={{...S.card,marginBottom:14}}>
-        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
-          ✅ Tâches à réaliser
-        </div>
+        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Taches a realiser</div>
         {[
           {k:"reservation",n:"1",label:"Créer une réservation",detail:"Client : "+scenario.client.nom+" — Choisir la chambre adaptée aux besoins"},
           {k:"acompte",n:"2",label:"Saisir un acompte",detail:"Obligatoire lors de la création de la réservation"},
@@ -2477,8 +2425,7 @@ const maxScore=Object.keys(score).length;
           {k:"reclamation",n:"4",label:"Traiter la réclamation",detail:scenario.reclamation.type+" — "+scenario.reclamation.urgence},
           {k:"checkout",n:"5",label:"Réaliser le check-out",detail:"Valider la facture et le paiement"},
         ].map(t=>(
-          <div key={t.k} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 0",
-            borderBottom:"1px solid rgba(255,255,255,.04)"}}>
+          <div key={t.k} style={{display:"flex",alignItems:"center",gap:12,padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
             <div style={{width:28,height:28,borderRadius:"50%",flexShrink:0,
               background:score[t.k]?"#3dbe7a":"rgba(255,255,255,.06)",
               border:`2px solid ${score[t.k]?"#3dbe7a":"rgba(255,255,255,.15)"}`,
@@ -2487,34 +2434,19 @@ const maxScore=Object.keys(score).length;
               {score[t.k]?"✓":t.n}
             </div>
             <div>
-              <div style={{fontSize:12,fontWeight:score[t.k]?400:500,
-                color:score[t.k]?"#4a5e72":"#dde4ee",
-                textDecoration:score[t.k]?"line-through":"none"}}>{t.label}</div>
+              <div style={{fontSize:12,color:score[t.k]?"#4a5e72":"#dde4ee",textDecoration:score[t.k]?"line-through":"none"}}>{t.label}</div>
               <div style={{fontSize:10.5,color:"#4a5e72"}}>{t.detail}</div>
             </div>
-            {score[t.k]&&<span style={{marginLeft:"auto",fontSize:11,color:"#3dbe7a"}}>✓ Validé</span>}
+            {score[t.k]&&<span style={{marginLeft:"auto",fontSize:11,color:"#3dbe7a"}}>Validé</span>}
           </div>
         ))}
       </div>
-
-      {/* Réclamation à traiter */}
-      <div style={{background:"rgba(232,160,48,.08)",border:"1px solid rgba(232,160,48,.25)",
-        borderLeft:"3px solid #e8a030",borderRadius:7,padding:"12px 16px",marginBottom:14}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#e8a030",marginBottom:6}}>
-          ⚠️ Réclamation à traiter — {scenario.reclamation.type} ({scenario.reclamation.urgence})
-        </div>
-        <div style={{fontSize:12,color:"#e8c870",fontStyle:"italic"}}>
-          « {scenario.reclamation.description} »
-        </div>
-        {!score.reclamation&&<div style={{fontSize:11,color:"#4a5e72",marginTop:6}}>
-          → Aller dans l'onglet Réclamations pour la traiter
-        </div>}
+      <div style={{background:"rgba(232,160,48,.08)",border:"1px solid rgba(232,160,48,.25)",borderLeft:"3px solid #e8a030",borderRadius:7,padding:"12px 16px",marginBottom:14}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#e8a030",marginBottom:6}}>Réclamation a traiter — {scenario.reclamation.type} ({scenario.reclamation.urgence})</div>
+        <div style={{fontSize:12,color:"#e8c870",fontStyle:"italic"}}>« {scenario.reclamation.description} »</div>
       </div>
-
       <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-        <button style={{...S.btnPrim,background:"#3dbe7a"}} onClick={terminerExamenLocal}>
-          Terminer
-        </button>
+        <button style={{...S.btnPrim,background:"#3dbe7a"}} onClick={terminerExamenLocal}>Terminer</button>
       </div>
     </div>
   );
@@ -2523,43 +2455,33 @@ const maxScore=Object.keys(score).length;
     <div>
       <div style={{textAlign:"center",marginBottom:24}}>
         <div style={{fontSize:48,marginBottom:8}}>{totalScore>=4?"🏆":totalScore>=3?"🥈":"🥉"}</div>
-       <div style={{textAlign:"center",marginBottom:24}}>
-        <div style={{fontSize:48,marginBottom:8}}>{totalScore>=4?"🏆":totalScore>=3?"🥈":"🥉"}</div>
-        <h2 style={{fontSize:20,color:"#dde4ee",fontWeight:600,marginBottom:4}}>
-          Résultat de l'examen
-        </h2>
+        <h2 style={{fontSize:20,color:"#dde4ee",fontWeight:600,marginBottom:4}}>Résultat de l'examen</h2>
         <div style={{fontSize:14,color:"#4a5e72"}}>{scenario.titre}</div>
       </div>
-     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:20}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:20}}>
         {[
           {v:`${totalScore}/${maxScore}`,l:"Score total",c:totalScore>=4?"#3dbe7a":totalScore>=3?"#e8a030":"#e05c5c"},
           {v:`${Math.round(totalScore/maxScore*100)}%`,l:"Taux de réussite",c:"#4a9fd4"},
           {v:`${Math.floor((scenario.duree*60-tempsRestant)/60)}min`,l:"Temps utilise",c:"#a07ad4"},
         ].map(k=>(
-          <div key={k.l} style={{background:"rgba(12,22,36,.9)",border:`1px solid ${k.c}18`,
-            borderLeft:`3px solid ${k.c}`,borderRadius:6,padding:"14px 16px",textAlign:"center"}}>
+          <div key={k.l} style={{background:"rgba(12,22,36,.9)",border:`1px solid ${k.c}18`,borderLeft:`3px solid ${k.c}`,borderRadius:6,padding:"14px 16px",textAlign:"center"}}>
             <div style={{fontSize:24,fontWeight:700,color:k.c}}>{k.v}</div>
             <div style={{fontSize:11,color:"#4a5e72",marginTop:4}}>{k.l}</div>
           </div>
-      ))}
-    ))}
+        ))}
       </div>
       <div style={S.card}>
-        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82"
-     
+        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>Detail des competences</div>
         {[
-          {k:"reservation",label:"Creation de reservation"},
+          {k:"reservation",label:"Création de réservation"},
           {k:"acompte",label:"Encaissement acompte"},
           {k:"checkin",label:"Check-in fiche de police"},
-          {k:"reclamation",label:"Gestion reclamation"},
+          {k:"reclamation",label:"Gestion réclamation"},
           {k:"checkout",label:"Check-out facture"},
         ].map(t=>(
-          <div key={t.k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-            padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
+          <div key={t.k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
             <span style={{fontSize:12,color:"#dde4ee"}}>{t.label}</span>
-            <span style={{fontSize:12,fontWeight:600,color:score[t.k]?"#3dbe7a":"#e05c5c"}}>
-              {score[t.k]?"Valide":"Non realise"}
-            </span>
+            <span style={{fontSize:12,fontWeight:600,color:score[t.k]?"#3dbe7a":"#e05c5c"}}>{score[t.k]?"Valide":"Non realise"}</span>
           </div>
         ))}
       </div>
@@ -2569,48 +2491,7 @@ const maxScore=Object.keys(score).length;
       </div>
     </div>
   );
- return null;
-        {
 
-     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:20}}>
-        {[
-          {v:`${totalScore}/${maxScore}`,l:"Score total",c:totalScore>=4?"#3dbe7a":totalScore>=3?"#e8a030":"#e05c5c"},
-          {v:`${Math.round(totalScore/maxScore*100)}%`,l:"Taux de réussite",c:"#4a9fd4"},
-          {v:`${Math.floor((scenario.duree*60-tempsRestant)/60)}min`,l:"Temps utilisé",c:"#a07ad4"},
-        ].map(k=>(
-          <div key={k.l} style={{background:"rgba(12,22,36,.9)",border:`1px solid ${k.c}18`,
-            borderLeft:`3px solid ${k.c}`,borderRadius:6,padding:"14px 16px",textAlign:"center"}}>
-            <div style={{fontSize:24,fontWeight:700,color:k.c}}>{k.v}</div>
-            <div style={{fontSize:11,color:"#4a5e72",marginTop:4}}>{k.l}</div>
-          </div>
-        ))}
-      </div>
-      <div style={S.card}>
-        <div style={{fontSize:11,fontWeight:600,color:"#5a6e82",textTransform:"uppercase",letterSpacing:1,marginBottom:12}}>
-          Détail des compétences
-        </div>
-        {[
-          {k:"reservation",label:"Création de réservation"},
-          {k:"acompte",label:"Encaissement d'un acompte"},
-          {k:"checkin",label:"Check-in avec fiche de police"},
-          {k:"reclamation",label:"Gestion de réclamation"},
-          {k:"checkout",label:"Check-out avec facture"},
-        ].map(t=>(
-          <div key={t.k} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-            padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,.04)"}}>
-            <span style={{fontSize:12,color:"#dde4ee"}}>{t.label}</span>
-            <span style={{fontSize:12,fontWeight:600,color:score[t.k]?"#3dbe7a":"#e05c5c"}}>
-              {score[t.k]?"Valide":"Non realise"}
-            </span>
-          </div>
-        ))}
-      </div>
-      <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:16}}>
-        <button style={S.btnGhost} onClick={()=>setPhase("accueil")}>Retour</button>
-        <button style={S.btnPrim} onClick={()=>window.print()}>Imprimer le rapport</button>
-      </div>
-    </div>
-  );
   return null;
 }
 function TraitementReclamationModal({reclamation,client,onConfirmer,onClose}){
