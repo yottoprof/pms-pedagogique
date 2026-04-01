@@ -1,178 +1,183 @@
-[README (3).md](https://github.com/user-attachments/files/26359446/README.3.md)
-# 🏨 PMS Pédagogique — Logiciel de Réception Hôtelière
+[README (4).md](https://github.com/user-attachments/files/26417542/README.4.md)# 🏨 PMS Pédagogique — Simulateur de réception hôtelière
 
-> Outil de simulation d'un Property Management System (PMS) hôtelier, conçu pour les classes de Bac Pro MCV, Commerce et filières hôtelières-restauration.
+> Outil pédagogique interactif simulant un Property Management System (PMS) d'hôtel, destiné aux élèves et enseignants en formation hôtelière.
 
-**Auteur :** Yannick Otto — Lycée Victor Hugo, Carpentras  
-**Licence :** [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)  
-**Version :** v2.2
-
----
-
-## 🌐 Accès en ligne
-
-| Plateforme | URL |
-|---|---|
-| GitHub Pages | https://yottoprof.github.io/pms-pedagogique/ |
-| Netlify | https://pms-pedagogique-vh.netlify.app/ |
+**Auteur :** Yannick Otto  
+**Établissement :** Lycée Victor Hugo, Carpentras  
+**Version :** v2.0  
+**Usage :** Scolaire exclusif — non affilié au groupe Accor
 
 ---
 
-## 🔐 Accès sécurisé (Firebase Authentication)
+## 📋 Présentation
 
-L'accès au PMS est protégé par une authentification Firebase.
+Ce simulateur reproduit fidèlement l'interface et les fonctionnalités d'un vrai logiciel de gestion hôtelière (PMS). Il est entièrement paramétrable par l'enseignant pour s'adapter à n'importe quel établissement fictif ou réel utilisé en formation.
 
-### Compte élèves
-| Champ | Valeur |
-|---|---|
-| Email | `eleve@pms-novotel.fr` |
-| Mot de passe | `Novotel2024` |
-
-### Compte professeur
-| Champ | Valeur |
-|---|---|
-| Email | `prof@pms-novotel.fr` |
-| Mot de passe | *(défini par l'enseignant dans Firebase Console)* |
-
----
-
-## 👤 Postes disponibles dans le PMS
-
-| Login | Poste | Rôle | Shift | Accès |
-|---|---|---|---|---|
-| `reception1` | Réceptionniste A | Réceptionniste | Matin (6h–14h) | Opérations |
-| `reception2` | Réceptionniste B | Réceptionniste | Soir (14h–22h) | Opérations |
-| `concierge` | Concierge | Réceptionniste | Journée (9h–18h) | Opérations |
-| `commercial` | Commercial Séminaires | Manager | Journée (9h–18h) | Opérations + Statistiques |
-| `manager` | Chef de réception | Manager | Journée (9h–18h) | Opérations + Statistiques + Clôture |
-| `direction` | Directeur | Directeur | Direction | Accès complet *(réservé prof)* |
-
-**Mot de passe commun :** `hotel2024`
-
----
-
-## 👥 Base clients pédagogique (25 clients)
-
-Les clients ont des **profils variés et des besoins exprimés** — l'élève doit analyser les besoins et attribuer la chambre adaptée. Les informations de contact (email, téléphone, ville, pays) sont volontairement vides pour être complétées par l'élève lors du check-in.
-
-| Profil | Exemples de besoins |
-|---|---|
-| Couple | Vue piscine, king size, anniversaire |
-| Famille avec enfants | Lits jumeaux, étage bas, grande capacité |
-| Voyageur d'affaires | Calme, Wi-Fi, facture société |
-| Client étranger | Non-fumeur, petit-déjeuner, barrière langue |
-| VIP Platine | Suite, surclassement, champagne, butler |
-| Senior | Étage bas, calme, long séjour |
-| PMR | Chambre accessible, douche italienne |
-| Couple romantique | Décoration chambre, demande en mariage |
-| Famille monoparentale | Budget limité, vue jardin |
-| Allergique | Literie hypoallergénique obligatoire |
+L'application tourne **100 % dans le navigateur**, sans serveur ni base de données : un simple fichier `index.html` suffit.
 
 ---
 
 ## ✨ Fonctionnalités
 
-### 🏠 Tableau de bord
-- KPIs en temps réel (taux d'occupation, chambres libres, arrivées, départs)
-- Plan des chambres coloré par statut
-- Demandes spéciales signalées en orange
+### Pour les élèves (rôles Réceptionniste / Manager)
 
-### 📋 Réservations
-- Création avec vérification des disponibilités
-- Calcul automatique HT / TVA / TTC
-- **Acompte obligatoire** (0%, 20%, 30%, 50%, 100%)
-- Affichage du solde restant dû sur la facture
+| Module | Description |
+|--------|-------------|
+| **Tableau de bord** | KPIs en temps réel (taux d'occupation, arrivées, départs, clients en séjour), plan des chambres, demandes spéciales actives |
+| **Réservations** | Création, filtrage, annulation, gestion des acomptes, notes de réception |
+| **Check-in** | Fiche de police obligatoire (Art. R.611-42), profil fidélité client, attribution de chambre |
+| **Check-out** | Génération de facture, encaissement, libération automatique de la chambre |
+| **Chambres** | Visualisation des statuts (libre, occupée, réservée, maintenance), fiche détaillée par chambre |
+| **Clients** | Base clientèle avec profils, fidélité (Bronze / Argent / Or / Platine), historique de séjours |
+| **Planning** | Vue calendrier 15 jours de l'occupation par chambre |
+| **Réclamations** | Gestion des réclamations avec niveau d'urgence, génération automatique aléatoire toutes les 10 min |
+| **Clôture du jour** | Rapport quotidien imprimable (arrivées, départs, CA, état des chambres) |
+| **Statistiques** | Tableaux de bord analytiques (accès Manager / Directeur uniquement) |
 
-### ✅ Check-in professionnel
-- **Badge fidélité** (Bronze / Argent / Or / Platine) avec message adapté
-- **Fiche de police numérique** obligatoire (Article R.611-42)
-- Signature électronique obligatoire
+### Pour l'enseignant (Mode Paramétrage)
 
-### 💶 Check-out avec facture
-- Facture détaillée avec acompte et solde restant
-- **Validation du paiement obligatoire** avant libération chambre
-- Impression possible
+Accessible via un mot de passe dédié, le mode enseignant permet de personnaliser :
 
-### 🛏 Gestion des chambres
-- Plan visuel par statut
-- Fiche détaillée par chambre
+- **L'hôtel** : nom, ville, étoiles, adresse, contact, TVA
+- **La couleur** de l'interface (adaptable à chaque enseigne : Novotel, Ibis, Mercure…)
+- **Le personnel** : comptes de connexion, rôles, postes, horaires
+- **Les chambres** : types, tarifs, équipements, statuts initiaux
+- **La base clients** : 25 profils pré-remplis avec besoins spécifiques variés
 
-### 👥 Fichier clients
-- 25 clients avec profils et besoins exprimés
-- Informations de contact à compléter par l'élève
-- Niveau de fidélité et historique des séjours
+### Mode Examen
 
-### 📅 Planning d'occupation
-- Calendrier visuel sur 15 jours
-- Initiales des clients dans les cases occupées
-
-### 📢 Réclamations clients
-- Saisie manuelle par type et niveau d'urgence
-- **Réclamations automatiques** toutes les 10 minutes (chambres occupées uniquement)
-- Notification rouge visible 15 secondes
-- Suivi statut (en cours / résolue)
-
-### 📊 Statistiques *(Manager/Directeur)*
-- Revenus mensuels, taux d'occupation, top clients
-
-### ⊟ Clôture du jour *(Manager/Directeur)*
-- Rapport journalier complet imprimable
-
-### ⚙ Paramétrage *(Directeur/Professeur)*
-- Identité de l'hôtel, personnel, chambres, clients
+Chronomètre intégré avec suivi automatique des tâches validées :
+- ✓ Création de réservation
+- ✓ Encaissement d'acompte
+- ✓ Check-in (fiche de police)
+- ✓ Traitement d'une réclamation
+- ✓ Check-out et facturation
 
 ---
 
-## 🎓 Usage pédagogique
+## 👥 Comptes utilisateurs par défaut
 
-### Compétences travaillées
-- Analyser les besoins d'un client et attribuer la chambre adaptée
-- Réaliser un check-in professionnel avec fiche de police
-- Encaisser un acompte et calculer le solde restant
-- Générer et expliquer une facture HT/TVA/TTC
-- Gérer une réclamation client en temps réel
-- Consulter le planning d'occupation
-- Rédiger un rapport de clôture journalière
+| Login | Mot de passe | Rôle | Poste |
+|-------|-------------|------|-------|
+| `reception1` | `hotel2024` | Réceptionniste | Réceptionniste A (6h–14h) |
+| `reception2` | `hotel2024` | Réceptionniste | Réceptionniste B (14h–22h) |
+| `concierge` | `hotel2024` | Réceptionniste | Concierge (9h–18h) |
+| `commercial` | `hotel2024` | Manager | Commercial Séminaires |
+| `manager` | `hotel2024` | Manager | Chef de réception |
+| `direction` | `hotel2024` | Directeur | Directeur *(caché)* |
 
-### Scénario type (1h de cours)
-1. Connexion Firebase + choix du poste
-2. Consultation du tableau de bord et du planning
-3. Analyse des besoins client → attribution de chambre
-4. Traitement des arrivées (check-in + fiche de police)
-5. Traitement des départs (check-out + facture)
-6. Gestion des réclamations automatiques
-7. Rapport de clôture *(manager)*
+> Le compte `direction` est masqué sur l'écran de connexion. Il est accessible uniquement via le mode enseignant.  
+> **Mot de passe enseignant :** `prof2024` *(modifiable dans le code)*
 
 ---
 
-## 🏗 Architecture technique
+## 🏗️ Configuration de l'hôtel par défaut
 
-- **Frontend :** React 18 (via CDN, sans build)
-- **Authentification :** Firebase Authentication
-- **Graphiques :** Chart.js
-- **Hébergement :** GitHub Pages + Netlify
-- **Stockage :** mémoire locale (session uniquement)
+L'application est pré-configurée avec un hôtel fictif **Novotel Sorgues 4★** à titre d'exemple :
 
----
-
-## ⚠️ Limitations
-
-- Les données sont réinitialisées à chaque rechargement de page
-- Ne pas rafraîchir le navigateur pendant une séance
-- Usage pédagogique exclusif — non affilié au groupe Accor
+- **27 chambres** réparties sur 3 étages (Standard, Supérieure, Suite Junior, Suite, Suite Prestige, PMR, Communicantes)
+- **25 profils clients** variés (couples, familles, PMR, VIP, étrangers, voyageurs d'affaires…)
+- **5 réservations initiales** dont 2 séjours en cours
+- **Météo locale** basée sur les températures moyennes mensuelles de Sorgues
 
 ---
 
-## 🗺 Feuille de route
+## 🚀 Installation et utilisation
 
-- [ ] Mode examen avec chronomètre et score
-- [ ] Module gestion des séminaires
-- [ ] Fiche client enrichie avec historique complet
+### Utilisation simple
+
+```bash
+# Cloner le dépôt
+git clone https://github.com/yottoprof/pms-pedagogique.git
+
+# Ouvrir directement dans un navigateur
+open index.html
+```
+
+Aucune installation, aucune dépendance à installer. Le fichier `index.html` est autonome.
+
+### Librairies utilisées (CDN)
+
+- **React 18** — Interface utilisateur
+- **Babel Standalone** — Transpilation JSX côté navigateur
+- **Chart.js 4.4** — Graphiques statistiques
+- **Firebase Auth** — Authentification (optionnelle / pré-configurée)
+- **Google Fonts (Inter)** — Typographie
+
+> ⚠️ Une connexion internet est nécessaire au premier chargement pour récupérer les librairies CDN.
+
+---
+
+## ⚙️ Personnalisation pour l'enseignant
+
+Toute la configuration se trouve dans le bloc `CONFIG` en haut du fichier `index.html`. Il suffit de modifier ce seul bloc, bien délimité par des commentaires :
+
+```javascript
+const CONFIG = {
+  hotel: {
+    nom: "Mon Hôtel",        // Nom affiché dans toute l'interface
+    ville: "Ma Ville",
+    etoiles: 4,
+    // ...
+  },
+  couleur: "#D4213D",        // Couleur principale (boutons, accents)
+  staff: [ /* ... */ ],      // Comptes élèves
+  chambres: [ /* ... */ ],   // Plan de l'hôtel
+  clients: [ /* ... */ ],    // Base clients
+};
+```
+
+**Exemples de couleurs par enseigne :**
+
+| Enseigne | Couleur |
+|----------|---------|
+| Novotel | `#D4213D` |
+| Ibis | `#E2001A` |
+| Mercure | `#003473` |
+| Marriott | `#8B0000` |
+| Hilton | `#003580` |
+
+---
+
+## 📐 Architecture technique
+
+```
+index.html
+├── CONFIG {}              ← Zone enseignant (seul bloc à modifier)
+├── Utilitaires            ← Fonctions de calcul, formatage dates/euros
+├── Composants React
+│   ├── LoginScreen        ← Écran de connexion + mode enseignant
+│   ├── App                ← Composant principal, gestion d'état global
+│   ├── Dashboard          ← Tableau de bord opérationnel
+│   ├── Reservations       ← CRUD réservations
+│   ├── Chambres           ← Plan et fiches chambres
+│   ├── ClientsTab         ← Base clients
+│   ├── Stats              ← Statistiques (Manager+)
+│   ├── Planning           ← Calendrier d'occupation
+│   ├── Reclamations       ← Gestion des incidents
+│   ├── ModeExamen         ← Évaluation chronométrée
+│   ├── Parametrage        ← Configuration enseignant
+│   └── Modals             ← Fiche police, factures, notes…
+└── Styles inline (S.*)    ← Système de design tokens
+```
+
+---
+
+## 🎓 Scénarios pédagogiques suggérés
+
+1. **Accueil simple** — Check-in d'un client confirmé, attribution de chambre, remise de clé
+2. **Gestion d'un VIP** — Client Platine avec surclassement obligatoire et panier bienvenue
+3. **Situation d'urgence** — Réclamation urgente + chambre en maintenance + liste d'attente
+4. **Clôture de shift** — Rapport de fin de journée, vérification des encaissements
+5. **Examen complet** — Toute la procédure de A à Z, chronométrée, avec score automatique
+6. **Client PMR** — Procédure d'accueil adaptée, chambre accessible, besoins spécifiques
 
 ---
 
 ## 📄 Licence
 
-© 2026 Yannick Otto — Lycée Victor Hugo, Carpentras  
-Outil pédagogique — Usage scolaire exclusif  
-[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+Usage **scolaire exclusif**. Ce logiciel est un outil pédagogique non commercial.  
+Toute utilisation commerciale est interdite.
+
+© 2024–2025 Yannick Otto — Lycée Victor Hugo, Carpentras
+
