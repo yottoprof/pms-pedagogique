@@ -2359,8 +2359,17 @@ function ModeExamen({resas,chambres,clients,getCl,getCh,user,onCheckin,onCheckou
     setResaExamen(null);
     setPhase("examen");
     setExamActif(true);
+    const reclaAuto={
+      ...sc.reclamation,
+      id:`EXAM${Date.now()}`,
+      clientId:"C001",
+      chambreId:"201",
+      date:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}),
+      statut:"en cours",
+      auteur:"Système — Scénario examen"
+    };
+    setReclamations(p=>[reclaAuto,...p]);
     clearInterval(intervalRef.current);
-    intervalRef.current=setInterval(()=>{
       setTempsRestant(t=>{
         if(t<=1){clearInterval(intervalRef.current);setExamActif(false);setPhase("rapport");return 0;}
         return t-1;
