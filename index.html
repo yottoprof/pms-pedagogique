@@ -579,7 +579,7 @@ const confirmCheckout=id=>{
     setResas(p=>p.map(x=>x.id===id?{...x,statut:"annulée"}:x));
     notify(`Réservation ${r.numero} annulée`,"err");
   };
- const addResa=data=>{
+const addResa=data=>{
     const num=`2024-${String(resas.length+1).padStart(3,"0")}`;
     const ch=getCh(data.chambreId);
     const totalTTC=calcTotal(ch,data)*(1+HOTEL.tva);
@@ -588,6 +588,10 @@ const confirmCheckout=id=>{
     setResas(p=>[...p,newR]);
     setChambres(p=>p.map(c=>c.id===data.chambreId?{...c,statut:"réservée"}:c));
     setModal(null);notify(`Réservation ${num} créée`,"ok");
+    if(examActif){
+      setScoreExamen(p=>({...p,reservation:true}));
+      if((data.acomptePercent||0)>0)setScoreExamen(p=>({...p,acompte:true}));
+    }
   };
   const addClient=data=>{
     const newC={...data,id:`C${String(clients.length+1).padStart(3,"0")}`,fidelite:"Bronze",sejours:0};
